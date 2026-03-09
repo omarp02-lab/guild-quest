@@ -49,8 +49,8 @@ GQ.Interior = class Interior extends Phaser.Scene {
     // ── NPC from map npc layer ─────────────────────────────────────
     this._placeNPC();
 
-    // ── D-pad ──────────────────────────────────────────────────────
-    this._buildDpad();
+    // ── Touch controls ─────────────────────────────────────────────
+    this._buildTouchControls();
 
     // ── Announcement text ──────────────────────────────────────────
     this._annText = this.add.text(this.scale.width / 2, 28, '', {
@@ -68,13 +68,13 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const dt     = delta / 1000;
     const speed  = 160;
     const player = this._player;
-    const ds     = this._dpadState;
+    const td     = this._touchDir;
 
     let dx = 0, dy = 0;
-    if (this._cursors.left.isDown  || this._wasd.A.isDown || ds.left)  dx = -speed;
-    if (this._cursors.right.isDown || this._wasd.D.isDown || ds.right) dx =  speed;
-    if (this._cursors.up.isDown    || this._wasd.W.isDown || ds.up)    dy = -speed;
-    if (this._cursors.down.isDown  || this._wasd.S.isDown || ds.down)  dy =  speed;
+    if (this._cursors.left.isDown  || this._wasd.A.isDown || td.x < -0.35) dx = -speed;
+    if (this._cursors.right.isDown || this._wasd.D.isDown || td.x >  0.35) dx =  speed;
+    if (this._cursors.up.isDown    || this._wasd.W.isDown || td.y < -0.35) dy = -speed;
+    if (this._cursors.down.isDown  || this._wasd.S.isDown || td.y >  0.35) dy =  speed;
 
     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
     if (dx < 0) player.setFlipX(true);
@@ -405,8 +405,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
   _setDialogueOpen (val) {
     this._dialogueOpen = val;
-    const dpad = document.getElementById('dpad');
-    if (dpad) dpad.style.visibility = val ? 'hidden' : 'visible';
+    if (val) this._touchDir = { x: 0, y: 0 };
   }
 
   _showAnnouncement (msg) {
@@ -463,64 +462,41 @@ GQ.Interior = class Interior extends Phaser.Scene {
     this.add.text(14, 46, '[ SPACE ]  TALK',      { fontFamily: "'Press Start 2P'", fontSize: '6px', color: '#F59E0B' }).setDepth(19);
   }
 
-  // ── D-pad ──────────────────────────────────────────────────────────
+  // ── Touch controls (mobile) ─────────────────────────────────────────
 
-  _buildDpad () {
-    this._dpadState = { up: false, down: false, left: false, right: false };
-    document.getElementById('dpad')?.remove();
+  _buildTouchControls () {
+    this._touchDir = { x: 0, y: 0 };
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
 
-    const dpad = document.createElement('div');
-    dpad.id = 'dpad';
-    dpad.innerHTML = `
-      <div></div><button class="dpad-btn" id="dpad-up">▲</button><div></div>
-      <button class="dpad-btn" id="dpad-left">◄</button>
-      <button class="dpad-btn dpad-center" id="dpad-e">▶</button>
-      <button class="dpad-btn" id="dpad-right">►</button>
-      <div></div><button class="dpad-btn" id="dpad-down">▼</button><div></div>
-    `;
-    document.body.appendChild(dpad);
+    let origin   = null;
+    let dragging = false;
 
-    for (const d of ['up', 'down', 'left', 'right']) {
-      const btn = document.getElementById(`dpad-${d}`);
-      if (!btn) continue;
-      btn.addEventListener('pointerdown',  () => { this._dpadState[d] = true;  });
-      btn.addEventListener('pointerup',    () => { this._dpadState[d] = false; });
-      btn.addEventListener('pointerleave', () => { this._dpadState[d] = false; });
-    }
+    this.input.on('pointerdown', (ptr) => {
+      origin   = { x: ptr.x, y: ptr.y };
+      dragging = false;
+    });
 
-    const eBtn = document.getElementById('dpad-e');
-    if (eBtn) {
-      eBtn.addEventListener('pointerdown', () => {
-        if (this._dialogueOpen) {
-          window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
-          return;
-        }
+    this.input.on('pointermove', (ptr) => {
+      if (!origin || !ptr.isDown) return;
+      const dx  = ptr.x - origin.x;
+      const dy  = ptr.y - origin.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 12) {
+        dragging        = true;
+        this._touchDir  = { x: dx / len, y: dy / len };
+      }
+    });
+
+    this.input.on('pointerup', () => {
+      if (!dragging && !this._dialogueOpen) {
         const n = this._getNearestInteractable();
         if (n) this._triggerInteract(n);
-      });
-    }
-
-    // Delay so Phaser's scale manager has time to position the canvas
-    this.time.delayedCall(150, () => this._placeDpad());
-    this._resizeHandler = () => this._placeDpad();
-    window.addEventListener('resize', this._resizeHandler);
+      }
+      origin         = null;
+      dragging       = false;
+      this._touchDir = { x: 0, y: 0 };
+    });
   }
 
-  _placeDpad () {
-    const canvas = document.querySelector('#game-container canvas');
-    const dpad   = document.getElementById('dpad');
-    if (!canvas || !dpad) return;
-    const r = canvas.getBoundingClientRect();
-    if (r.width === 0) {
-      this.time.delayedCall(100, () => this._placeDpad());
-      return;
-    }
-    dpad.style.left   = (r.left   + 16) + 'px';
-    dpad.style.bottom = (window.innerHeight - r.bottom + 24) + 'px';
-  }
-
-  shutdown () {
-    document.getElementById('dpad')?.remove();
-    window.removeEventListener('resize', this._resizeHandler);
-  }
+  shutdown () {}
 };

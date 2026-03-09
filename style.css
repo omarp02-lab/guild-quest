@@ -424,50 +424,6 @@ html, body {
   border-color: var(--gold);
 }
 
-/* ── Mobile touch D-pad ────────────────────────────────────────────────── */
-#dpad {
-  position: fixed;
-  left: 16px;
-  bottom: 24px;
-  z-index: 50;
-  display: none;
-  user-select: none;
-  grid-template-columns: 38px 38px 38px;
-  grid-template-rows: 38px 38px 38px;
-  gap: 3px;
-  /* left/bottom overridden by JS to sit over the game canvas */
-}
-
-@media (max-width: 768px), (pointer: coarse) {
-  #dpad { display: grid; }
-}
-
-.dpad-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-radius: 4px;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: none;
-  backdrop-filter: blur(3px);
-}
-
-.dpad-btn:active { background: rgba(255, 255, 255, 0.22); }
-
-.dpad-center {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: rgba(245, 158, 11, 0.75);
-  color: rgba(245, 158, 11, 1);
-  font-size: 10px;
-  font-family: var(--pixel);
-}
-
-.dpad-center:active { background: rgba(245, 158, 11, 0.45); }
 
 /* ── Landscape lock overlay ────────────────────────────────────────────── */
 #landscape-warn {

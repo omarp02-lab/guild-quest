@@ -24,6 +24,9 @@ GQ.CharacterCreate = class CharacterCreate extends Phaser.Scene {
     const overlay = document.getElementById('char-create');
     overlay.classList.remove('hidden');
 
+    // Start village music on first touch/click of the opening screen
+    overlay.addEventListener('pointerdown', () => GQ.Audio.play(this, 'music-village'), { once: true });
+
     // ── Wire up the overlay UI ─────────────────────────────────────────
     const nameInput = document.getElementById('hero-name');
     const beginBtn  = document.getElementById('begin-btn');
