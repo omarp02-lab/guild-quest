@@ -4,6 +4,14 @@
 
 window.GQ = window.GQ || {};
 
+// Unlock Web Audio on first user gesture (mobile browsers suspend AudioContext)
+['touchstart', 'click'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    const ctx = window.GQ.game?.sound?.context;
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }, { once: true, capture: true });
+});
+
 GQ.Audio = {
   _sound:   null,   // active looping sound object
   _current: null,   // key of the track currently loaded
@@ -11,6 +19,10 @@ GQ.Audio = {
 
   // ── Start (or continue) a looping track ─────────────────────────
   play (scene, key) {
+    // Resume suspended AudioContext (mobile autoplay policy)
+    const ctx = scene.sound.context;
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+
     // Already playing this track — do nothing
     if (this._current === key && this._sound && this._sound.isPlaying) return;
 

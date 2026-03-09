@@ -558,15 +558,13 @@ GQ.Village = class Village extends Phaser.Scene {
   _buildDpad () {
     this._dpadState = { up: false, down: false, left: false, right: false };
     document.getElementById('dpad')?.remove();
-    document.getElementById('dpad-act')?.remove();
 
-    // Directional pad (no center cell)
     const dpad = document.createElement('div');
     dpad.id = 'dpad';
     dpad.innerHTML = `
       <div></div><button class="dpad-btn" id="dpad-up">▲</button><div></div>
       <button class="dpad-btn" id="dpad-left">◄</button>
-      <div></div>
+      <button class="dpad-btn dpad-center" id="dpad-e">▶</button>
       <button class="dpad-btn" id="dpad-right">►</button>
       <div></div><button class="dpad-btn" id="dpad-down">▼</button><div></div>
     `;
@@ -580,25 +578,34 @@ GQ.Village = class Village extends Phaser.Scene {
       btn.addEventListener('pointerleave', () => { this._dpadState[d] = false; });
     }
 
-    // Separate interact / advance button (bottom-right)
-    const actBtn = document.createElement('button');
-    actBtn.id = 'dpad-act';
-    actBtn.textContent = '▶';
-    document.body.appendChild(actBtn);
-    actBtn.addEventListener('pointerdown', () => {
-      if (this._dialogueOpen) {
-        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
-        return;
-      }
-      const n = this._getNearestInteractable();
-      if (n) this._triggerInteract(n);
-    });
+    const eBtn = document.getElementById('dpad-e');
+    if (eBtn) {
+      eBtn.addEventListener('pointerdown', () => {
+        if (this._dialogueOpen) {
+          window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
+          return;
+        }
+        const n = this._getNearestInteractable();
+        if (n) this._triggerInteract(n);
+      });
+    }
+
+    this._placeDpad();
+    window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
+  }
+
+  _placeDpad () {
+    const canvas = document.querySelector('#game-container canvas');
+    const dpad   = document.getElementById('dpad');
+    if (!canvas || !dpad) return;
+    const r = canvas.getBoundingClientRect();
+    dpad.style.left   = (r.left   + 16) + 'px';
+    dpad.style.bottom = (window.innerHeight - r.bottom + 24) + 'px';
   }
 
   shutdown () {
     const bar = document.getElementById('progress-bar');
     if (bar) bar.style.display = 'none';
     document.getElementById('dpad')?.remove();
-    document.getElementById('dpad-act')?.remove();
   }
 };
