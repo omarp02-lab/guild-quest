@@ -52,6 +52,9 @@ GQ.Village = class Village extends Phaser.Scene {
     }
     this._guildMasterUnlocked = this._completed.size >= 9;
 
+    // ── Music ───────────────────────────────────────────────────────
+    GQ.Audio.play(this, 'music-village');
+
     // ── Tiled map background + door/collision rects ──────────────────
     this._drawMap();
 
@@ -554,15 +557,16 @@ GQ.Village = class Village extends Phaser.Scene {
 
   _buildDpad () {
     this._dpadState = { up: false, down: false, left: false, right: false };
-    const existing = document.getElementById('dpad');
-    if (existing) existing.remove();
+    document.getElementById('dpad')?.remove();
+    document.getElementById('dpad-act')?.remove();
 
+    // Directional pad (no center cell)
     const dpad = document.createElement('div');
     dpad.id = 'dpad';
     dpad.innerHTML = `
       <div></div><button class="dpad-btn" id="dpad-up">▲</button><div></div>
       <button class="dpad-btn" id="dpad-left">◄</button>
-      <button class="dpad-btn dpad-center" id="dpad-e">▶</button>
+      <div></div>
       <button class="dpad-btn" id="dpad-right">►</button>
       <div></div><button class="dpad-btn" id="dpad-down">▼</button><div></div>
     `;
@@ -575,19 +579,26 @@ GQ.Village = class Village extends Phaser.Scene {
       btn.addEventListener('pointerup',    () => { this._dpadState[d] = false; });
       btn.addEventListener('pointerleave', () => { this._dpadState[d] = false; });
     }
-    const eBtn = document.getElementById('dpad-e');
-    if (eBtn) {
-      eBtn.addEventListener('pointerdown', () => {
-        const n = this._getNearestInteractable();
-        if (n) this._triggerInteract(n);
-      });
-    }
+
+    // Separate interact / advance button (bottom-right)
+    const actBtn = document.createElement('button');
+    actBtn.id = 'dpad-act';
+    actBtn.textContent = '▶';
+    document.body.appendChild(actBtn);
+    actBtn.addEventListener('pointerdown', () => {
+      if (this._dialogueOpen) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
+        return;
+      }
+      const n = this._getNearestInteractable();
+      if (n) this._triggerInteract(n);
+    });
   }
 
   shutdown () {
-    const bar  = document.getElementById('progress-bar');
-    const dpad = document.getElementById('dpad');
-    if (bar)  bar.style.display = 'none';
-    if (dpad) dpad.remove();
+    const bar = document.getElementById('progress-bar');
+    if (bar) bar.style.display = 'none';
+    document.getElementById('dpad')?.remove();
+    document.getElementById('dpad-act')?.remove();
   }
 };

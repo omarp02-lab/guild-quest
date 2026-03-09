@@ -15,15 +15,13 @@
 html, body {
   width: 100%; height: 100%;
   background: #0d0a0e;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
 /* ── Game Canvas Container ─────────────────────────────────────────────── */
 #game-container {
-  position: relative;
+  position: fixed;
+  inset: 0;
   z-index: 1;
 }
 
@@ -162,6 +160,14 @@ html, body {
 .arch-icon { font-size: 24px; }
 .arch-name { font-size: 7px; color: var(--cream); }
 .arch-desc { font-size: 5px; color: #a89f94; }
+
+/* Mobile: shrink hero picker so all 5 fit without overflow */
+@media (max-width: 540px) {
+  .panel { padding: 24px 16px; }
+  .archetypes { gap: 5px; }
+  .arch { padding: 8px 4px; }
+  .hero-canvas { width: 36px; height: 36px; }
+}
 
 /* ── Begin Button ──────────────────────────────────────────────────────── */
 #begin-btn {
@@ -418,39 +424,89 @@ html, body {
 /* ── Mobile touch D-pad ────────────────────────────────────────────────── */
 #dpad {
   position: fixed;
-  bottom: 36px;
+  bottom: 40px;
   left: 20px;
   z-index: 50;
   display: none;
   user-select: none;
+  grid-template-columns: 38px 38px 38px;
+  grid-template-rows: 38px 38px 38px;
+  gap: 3px;
 }
 
 @media (max-width: 768px), (pointer: coarse) {
   #dpad { display: grid; }
 }
 
-#dpad {
-  grid-template-columns: 44px 44px 44px;
-  grid-template-rows: 44px 44px 44px;
-  gap: 4px;
-}
-
 .dpad-btn {
-  background: rgba(245,158,11,0.15);
-  border: 2px solid rgba(245,158,11,0.3);
-  color: var(--gold);
-  font-size: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 4px;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
+  backdrop-filter: blur(2px);
 }
 
-.dpad-btn:active { background: rgba(245,158,11,0.35); }
-.dpad-center { background: rgba(245,158,11,0.25); font-size: 10px; font-family: var(--pixel); }
+.dpad-btn:active { background: rgba(255, 255, 255, 0.22); }
+
+/* ── Interact / advance button (bottom-right) ──────────────────────────── */
+#dpad-act {
+  position: fixed;
+  bottom: 52px;
+  right: 20px;
+  z-index: 50;
+  display: none;
+  width: 58px;
+  height: 58px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: rgba(245, 158, 11, 0.8);
+  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  backdrop-filter: blur(2px);
+  user-select: none;
+}
+
+#dpad-act:active { background: rgba(245, 158, 11, 0.3); }
+
+@media (max-width: 768px), (pointer: coarse) {
+  #dpad-act { display: flex; }
+}
+
+/* ── Mute Button ───────────────────────────────────────────────────────── */
+#mute-btn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 200;
+  background: rgba(26, 22, 18, 0.85);
+  border: 2px solid #5a5248;
+  color: var(--cream);
+  font-size: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+#mute-btn:hover { border-color: var(--gold); background: rgba(26, 22, 18, 0.95); }
 
 /* ── Char Create — Ancient Parchment Theme ─────────────────────────────── */
 #char-create.overlay {

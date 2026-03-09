@@ -39,6 +39,8 @@ GQ.Results = class Results extends Phaser.Scene {
 
     this._render();
 
+    GQ.Audio.play(this, 'music-results');
+
     document.getElementById('result-prev').onclick = () => {
       if (this._idx > 0) { this._idx--; this._render(); }
     };
@@ -46,6 +48,7 @@ GQ.Results = class Results extends Phaser.Scene {
       if (this._idx < this._results.length - 1) { this._idx++; this._render(); }
     };
     document.getElementById('play-again').onclick = () => {
+      GQ.Audio.stop();
       document.getElementById('results').classList.add('hidden');
       window.GQ.profile    = null;
       window.GQ.completed  = null;

@@ -68,6 +68,10 @@ GQ.GuildMaster = class GuildMaster extends Phaser.Scene {
       color:      '#F59E0B',
     }).setOrigin(0.5).setAlpha(0);
 
+    // ── Music: stop village/interior, play fanfare stinger ────────────
+    GQ.Audio.stop();
+    GQ.Audio.playOnce(this, 'music-fanfare');
+
     // ── Animate in sequence ────────────────────────────────────────────
     this.tweens.add({
       targets:  gm,

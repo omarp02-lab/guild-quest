@@ -36,6 +36,12 @@ GQ.Preload = class Preload extends Phaser.Scene {
     this.load.image('ts-spaced', 'assets/kenney_tiny-town/Tilemap/tilemap.png');
     this.load.image('ts-like2',  'assets/kenney_roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png');
 
+    // ── Audio ────────────────────────────────────────────────────────
+    this.load.audio('music-village',  'assets/audio/village.ogg');
+    this.load.audio('music-interior', 'assets/audio/interior.ogg');
+    this.load.audio('music-results',  'assets/audio/results.ogg');
+    this.load.audio('music-fanfare',  'assets/audio/fanfare.ogg');
+
     this.add.text(W / 2, H / 2 - 60, 'GUILD QUEST', {
       fontFamily: "'Press Start 2P'",
       fontSize: '20px',
@@ -88,6 +94,7 @@ GQ.Preload = class Preload extends Phaser.Scene {
 
   create () {
     this._extractCharTextures();
+    GQ.Audio.initBtn();
     this.time.delayedCall(300, () => this.scene.start('CharacterCreate'));
   }
 

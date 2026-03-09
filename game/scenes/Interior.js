@@ -23,6 +23,9 @@ GQ.Interior = class Interior extends Phaser.Scene {
     this._dialogueOpen  = false;
     this._interactables = [];
 
+    // ── Music ──────────────────────────────────────────────────────
+    GQ.Audio.play(this, 'music-interior');
+
     // ── Draw interior map ──────────────────────────────────────────
     this._drawMap();
 
@@ -292,8 +295,8 @@ GQ.Interior = class Interior extends Phaser.Scene {
         'Come with me. Your path is waiting.',
       ], null, () => {
         this._dialogueOpen = false;
-        const dpad = document.getElementById('dpad');
-        if (dpad) dpad.remove();
+        document.getElementById('dpad')?.remove();
+        document.getElementById('dpad-act')?.remove();
         this.scene.start('GuildMaster', { profile: window.GQ.profile });
       });
       return;
@@ -436,8 +439,8 @@ GQ.Interior = class Interior extends Phaser.Scene {
   // ── Exit ───────────────────────────────────────────────────────────
 
   _exitInterior () {
-    const dpad = document.getElementById('dpad');
-    if (dpad) dpad.remove();
+    document.getElementById('dpad')?.remove();
+    document.getElementById('dpad-act')?.remove();
     this.scene.start('Village', { returnX: this._returnX, returnY: this._returnY });
   }
 
@@ -458,15 +461,16 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
   _buildDpad () {
     this._dpadState = { up: false, down: false, left: false, right: false };
-    const existing = document.getElementById('dpad');
-    if (existing) existing.remove();
+    document.getElementById('dpad')?.remove();
+    document.getElementById('dpad-act')?.remove();
 
+    // Directional pad (no center cell)
     const dpad = document.createElement('div');
     dpad.id = 'dpad';
     dpad.innerHTML = `
       <div></div><button class="dpad-btn" id="dpad-up">▲</button><div></div>
       <button class="dpad-btn" id="dpad-left">◄</button>
-      <button class="dpad-btn dpad-center" id="dpad-e">▶</button>
+      <div></div>
       <button class="dpad-btn" id="dpad-right">►</button>
       <div></div><button class="dpad-btn" id="dpad-down">▼</button><div></div>
     `;
@@ -479,17 +483,24 @@ GQ.Interior = class Interior extends Phaser.Scene {
       btn.addEventListener('pointerup',    () => { this._dpadState[d] = false; });
       btn.addEventListener('pointerleave', () => { this._dpadState[d] = false; });
     }
-    const eBtn = document.getElementById('dpad-e');
-    if (eBtn) {
-      eBtn.addEventListener('pointerdown', () => {
-        const n = this._getNearestInteractable();
-        if (n) this._triggerInteract(n);
-      });
-    }
+
+    // Separate interact / advance button (bottom-right)
+    const actBtn = document.createElement('button');
+    actBtn.id = 'dpad-act';
+    actBtn.textContent = '▶';
+    document.body.appendChild(actBtn);
+    actBtn.addEventListener('pointerdown', () => {
+      if (this._dialogueOpen) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
+        return;
+      }
+      const n = this._getNearestInteractable();
+      if (n) this._triggerInteract(n);
+    });
   }
 
   shutdown () {
-    const dpad = document.getElementById('dpad');
-    if (dpad) dpad.remove();
+    document.getElementById('dpad')?.remove();
+    document.getElementById('dpad-act')?.remove();
   }
 };
