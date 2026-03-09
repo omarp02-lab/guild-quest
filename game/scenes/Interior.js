@@ -260,7 +260,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(5);
     const isMobile = window.matchMedia('(pointer: coarse)').matches;
-    const prompt   = this.add.text(worldX, worldY - 40, isMobile ? '▶  TO TALK' : '[SPACE] TO TALK', {
+    const prompt   = this.add.text(worldX, worldY - 40, isMobile ? 'TAP TO TALK' : '[SPACE] TO TALK', {
       fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(6).setAlpha(0);

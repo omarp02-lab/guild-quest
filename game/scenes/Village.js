@@ -282,7 +282,7 @@ GQ.Village = class Village extends Phaser.Scene {
         const cx     = obj.x * SCALE + (obj.width  * SCALE) / 2;
         const cy     = obj.y * SCALE + (obj.height * SCALE) / 2;
         const bottom = (obj.y + obj.height) * SCALE;
-        const prompt = this.add.text(cx, cy - 30, isMobile ? '▶  TO ENTER' : '[SPACE] TO ENTER', {
+        const prompt = this.add.text(cx, cy - 30, isMobile ? 'TAP TO ENTER' : '[SPACE] TO ENTER', {
           fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#ffffff',
           stroke: '#000000', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(6).setAlpha(0);
@@ -312,7 +312,7 @@ GQ.Village = class Village extends Phaser.Scene {
     this._addNPCFromDef(160, 608, 'TRAVELER');
 
     // ── Sign ──────────────────────────────────────────────────────────
-    const signPrompt = this.add.text(232, 628, window.matchMedia('(pointer: coarse)').matches ? '▶  TO READ' : '[SPACE] TO READ', {
+    const signPrompt = this.add.text(232, 628, window.matchMedia('(pointer: coarse)').matches ? 'TAP TO READ' : '[SPACE] TO READ', {
       fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(6).setAlpha(0);
@@ -334,7 +334,7 @@ GQ.Village = class Village extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(5);
 
     const isMobile = window.matchMedia('(pointer: coarse)').matches;
-    const prompt = this.add.text(x, y - 40, isMobile ? '▶  TO TALK' : '[SPACE] TO TALK', {
+    const prompt = this.add.text(x, y - 40, isMobile ? 'TAP TO TALK' : '[SPACE] TO TALK', {
       fontFamily: "'Press Start 2P'",
       fontSize:   '7px',
       color:      '#ffffff',
