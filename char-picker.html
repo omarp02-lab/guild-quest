@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Character Picker — Guild Quest</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d14;
+      color: #e2e2f0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 10px 20px;
+      border-bottom: 1px solid #1e1e30;
+      background: #11111c;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 15px;
+      color: #F59E0B;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      color: #6b6b88;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    /* ── Three-column layout ── */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel-title {
+      padding: 7px 12px;
+      font-size: 11px;
+      color: #6b6b88;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid #1e1e30;
+      flex-shrink: 0;
+    }
+
+    /* ── LEFT: Spritesheet (~55%) ── */
+    .sheet-panel {
+      flex: 0 0 55%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1e1e30;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .sheet-scroll {
+      overflow: auto;
+      flex: 1;
+      padding: 12px;
+      min-height: 0;
+    }
+
+    #sheet-canvas-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: crosshair;
+    }
+
+    #sheet-canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #sheet-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #tile-tooltip {
+      position: fixed;
+      background: #1a1a2e;
+      border: 1px solid #F59E0B;
+      color: #F59E0B;
+      padding: 3px 8px;
+      font-size: 11px;
+      border-radius: 3px;
+      pointer-events: none;
+      display: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    #load-error {
+      color: #f87171;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
+    /* ── MIDDLE: Slot list (~20%) ── */
+    .slots-panel {
+      flex: 0 0 20%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1e1e30;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .slots-scroll {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px;
+      min-height: 0;
+    }
+
+    .slot-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      margin-bottom: 3px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+      user-select: none;
+    }
+
+    .slot-item:hover {
+      background: #16162a;
+      border-color: #2e2e4a;
+    }
+
+    .slot-item.active {
+      background: #1e1a0a;
+      border-color: #F59E0B;
+    }
+
+    .slot-item.active .slot-name {
+      color: #F59E0B;
+    }
+
+    .slot-canvas {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border: 1px solid #2e2e4a;
+      border-radius: 3px;
+      background: #0a0a12;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .slot-item.active .slot-canvas {
+      border-color: #F59E0B;
+    }
+
+    .slot-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .slot-name {
+      color: #c8c8e0;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .slot-badge {
+      display: inline-block;
+      margin-top: 3px;
+      background: #1e1e30;
+      color: #888899;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 10px;
+      border: 1px solid #2e2e48;
+    }
+
+    .slot-item.active .slot-badge {
+      background: #2b1f00;
+      border-color: #7a4f00;
+      color: #F59E0B;
+    }
+
+    /* ── RIGHT: Layer editor (~25%) ── */
+    .layers-panel {
+      flex: 0 0 25%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .layers-scroll {
+      overflow-y: auto;
+      flex: 1;
+      padding: 10px;
+      min-height: 0;
+    }
+
+    /* Large preview */
+    #large-preview-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 12px 0 8px;
+      flex-shrink: 0;
+    }
+
+    #large-preview {
+      width: 96px;
+      height: 96px;
+      border: 1px solid #2e2e4a;
+      border-radius: 4px;
+      background: #0a0a12;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .active-slot-label {
+      text-align: center;
+      font-size: 11px;
+      color: #F59E0B;
+      letter-spacing: 0.5px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1e1e30;
+      flex-shrink: 0;
+    }
+
+    /* Layer rows */
+    .layer-list {
+      margin-top: 10px;
+    }
+
+    .layer-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 6px;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      background: #13131f;
+      border: 1px solid #1e1e30;
+    }
+
+    .layer-num {
+      color: #5a5a78;
+      font-size: 10px;
+      min-width: 16px;
+      text-align: right;
+    }
+
+    .layer-tile-canvas {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #2e2e4a;
+      border-radius: 2px;
+      background: #0a0a12;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      flex-shrink: 0;
+    }
+
+    .layer-tile-id {
+      flex: 1;
+      color: #9090b0;
+      font-size: 11px;
+    }
+
+    .layer-btn {
+      background: #1e1e30;
+      color: #c8c8e0;
+      border: 1px solid #2e2e4a;
+      border-radius: 3px;
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.1s, color 0.1s;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .layer-btn:hover {
+      background: #2e2e4a;
+      color: #ffffff;
+    }
+
+    .layer-btn.remove:hover {
+      background: #3a1a1a;
+      border-color: #6b3030;
+      color: #f87171;
+    }
+
+    .layer-btn.up:hover {
+      background: #1a2a1a;
+      border-color: #305030;
+      color: #86efac;
+    }
+
+    /* Clear button */
+    #clear-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      background: #1e1e30;
+      color: #f87171;
+      border: 1px solid #3a1a1a;
+      padding: 6px 0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: background 0.1s;
+    }
+
+    #clear-btn:hover { background: #2a1515; }
+
+    .no-layers-msg {
+      color: #3a3a58;
+      font-size: 11px;
+      text-align: center;
+      padding: 16px 0 4px;
+      font-style: italic;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 8px 16px;
+      border-top: 1px solid #1e1e30;
+      background: #11111c;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    #copy-btn {
+      background: #F59E0B;
+      color: #0d0d14;
+      border: none;
+      padding: 6px 16px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    #copy-btn:hover { background: #fbbf24; }
+    #copy-btn:active { transform: scale(0.97); }
+
+    #copy-status {
+      font-size: 11px;
+      color: #6b6b88;
+      transition: color 0.3s;
+    }
+
+    #copy-status.ok { color: #4ade80; }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0d0d14; }
+    ::-webkit-scrollbar-thumb { background: #2e2e4a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4e4e6a; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Character Picker</h1>
+  <p>Guild Quest — stack spritesheet tiles as layers per character slot</p>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: Spritesheet -->
+  <div class="sheet-panel">
+    <div class="panel-title">Spritesheet &nbsp;·&nbsp; 54 cols × 12 rows &nbsp;·&nbsp; click tile to add layer</div>
+    <div class="sheet-scroll" id="sheet-scroll">
+      <div id="sheet-canvas-wrapper">
+        <canvas id="sheet-canvas"></canvas>
+        <canvas id="sheet-overlay"></canvas>
+      </div>
+      <div id="load-error" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- MIDDLE: Slot list -->
+  <div class="slots-panel">
+    <div class="panel-title">Character slots</div>
+    <div class="slots-scroll" id="slots-container"></div>
+  </div>
+
+  <!-- RIGHT: Layer editor -->
+  <div class="layers-panel">
+    <div class="panel-title">Layer editor</div>
+    <div id="large-preview-wrap">
+      <canvas id="large-preview" width="96" height="96"></canvas>
+    </div>
+    <div class="active-slot-label" id="active-slot-label">—</div>
+    <div class="layers-scroll" id="layers-scroll">
+      <div class="layer-list" id="layer-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <button id="copy-btn">Copy JS</button>
+  <span id="copy-status">Copies CHAR_FRAMES constant to clipboard</span>
+</footer>
+
+<div id="tile-tooltip"></div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const SHEET_PATH = 'assets/kenney_roguelike-characters/Spritesheet/roguelikeChar_transparent.png';
+  const TILE_W     = 16;
+  const TILE_H     = 16;
+  const TILE_STEP  = 17;   // 16px tile + 1px gap
+  const COLS       = 54;
+  const ROWS       = 12;
+  const SCALE      = 3;    // sheet display scale
+
+  const CHAR_NAMES = [
+    'hero_1', 'hero_2', 'hero_3', 'hero_4', 'hero_5',
+    'npc_guildmaster', 'npc_librarian', 'npc_artisan', 'npc_blacksmith',
+    'npc_mason', 'npc_vendor', 'npc_inn_keeper', 'npc_hermit', 'npc_bard',
+  ];
+
+  // Current layers — matches CHAR_FRAMES in Preload.js
+  const charLayers = {
+    hero_1:          [108, 115, 73, 139, 200],
+    hero_2:          [108, 122, 381, 133, 368],
+    hero_3:          [270, 142],
+    hero_4:          [325, 479],
+    hero_5:          [2, 283, 130, 45, 461, 594],
+    npc_guildmaster: [162, 495, 489, 435, 31, 255],
+    npc_librarian:   [56, 55, 228, 165, 508],
+    npc_artisan:     [58, 163, 55, 54, 55, 174, 327, 128, 137, 258],
+    npc_blacksmith:  [1, 55, 283, 57, 293, 103],
+    npc_mason:       [108, 385],
+    npc_vendor:      [487, 608],
+    npc_inn_keeper:  [541],
+    npc_hermit:      [113, 486],
+    npc_bard:        [109, 67, 327, 20, 352],
+  };
+
+  // ── State ───────────────────────────────────────────────────────────────────
+  let activeSlot  = CHAR_NAMES[0];
+  let sheetImg    = null;
+  let hoveredTile = -1;
+
+  // ── DOM refs ─────────────────────────────────────────────────────────────────
+  const sheetCanvas    = document.getElementById('sheet-canvas');
+  const overlayCanvas  = document.getElementById('sheet-overlay');
+  const sheetCtx       = sheetCanvas.getContext('2d');
+  const overlayCtx     = overlayCanvas.getContext('2d');
+  const wrapper        = document.getElementById('sheet-canvas-wrapper');
+  const slotsContainer = document.getElementById('slots-container');
+  const layerList      = document.getElementById('layer-list');
+  const largePreview   = document.getElementById('large-preview');
+  const largeCtx       = largePreview.getContext('2d');
+  const activeLabel    = document.getElementById('active-slot-label');
+  const tooltip        = document.getElementById('tile-tooltip');
+  const copyBtn        = document.getElementById('copy-btn');
+  const copyStatus     = document.getElementById('copy-status');
+  const loadError      = document.getElementById('load-error');
+
+  // ── Geometry helpers ─────────────────────────────────────────────────────────
+  function tileCoords(id) {
+    return { col: id % COLS, row: Math.floor(id / COLS) };
+  }
+
+  function tileSrcXY(id) {
+    const { col, row } = tileCoords(id);
+    return { x: col * TILE_STEP, y: row * TILE_STEP };
+  }
+
+  // ── Composite renderer ───────────────────────────────────────────────────────
+  // Draws all layers of `name` onto `ctx` at destination size (dw x dh).
+  function compositeChar(ctx, name, dw, dh) {
+    if (!sheetImg) return;
+    ctx.clearRect(0, 0, dw, dh);
+    ctx.imageSmoothingEnabled = false;
+    const layers = charLayers[name] || [];
+    for (const tileId of layers) {
+      if (tileId < 0 || tileId >= COLS * ROWS) continue;
+      const { x, y } = tileSrcXY(tileId);
+      ctx.drawImage(sheetImg, x, y, TILE_W, TILE_H, 0, 0, dw, dh);
+    }
+  }
+
+  // Draw a single tile onto a canvas at full dest size
+  function drawSingleTile(ctx, tileId, dw, dh) {
+    if (!sheetImg) return;
+    ctx.clearRect(0, 0, dw, dh);
+    if (tileId < 0 || tileId >= COLS * ROWS) return;
+    ctx.imageSmoothingEnabled = false;
+    const { x, y } = tileSrcXY(tileId);
+    ctx.drawImage(sheetImg, x, y, TILE_W, TILE_H, 0, 0, dw, dh);
+  }
+
+  // ── Middle panel: slot list ──────────────────────────────────────────────────
+  function buildSlots() {
+    slotsContainer.innerHTML = '';
+    for (const name of CHAR_NAMES) {
+      const item = document.createElement('div');
+      item.className = 'slot-item' + (name === activeSlot ? ' active' : '');
+      item.dataset.name = name;
+
+      const cvs = document.createElement('canvas');
+      cvs.className = 'slot-canvas';
+      cvs.width  = 48;
+      cvs.height = 48;
+      cvs.id = 'preview-' + name;
+
+      const info = document.createElement('div');
+      info.className = 'slot-info';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'slot-name';
+      nameEl.textContent = name;
+
+      const badge = document.createElement('div');
+      badge.className = 'slot-badge';
+      badge.id = 'badge-' + name;
+      badge.textContent = layerCount(name) + ' layer' + (layerCount(name) === 1 ? '' : 's');
+
+      info.appendChild(nameEl);
+      info.appendChild(badge);
+      item.appendChild(cvs);
+      item.appendChild(info);
+      item.addEventListener('click', () => setActiveSlot(name));
+      slotsContainer.appendChild(item);
+    }
+  }
+
+  function layerCount(name) {
+    return (charLayers[name] || []).length;
+  }
+
+  function refreshSlotPreview(name) {
+    const cvs = document.getElementById('preview-' + name);
+    if (!cvs) return;
+    compositeChar(cvs.getContext('2d'), name, 48, 48);
+
+    const badge = document.getElementById('badge-' + name);
+    if (badge) {
+      const n = layerCount(name);
+      badge.textContent = n + ' layer' + (n === 1 ? '' : 's');
+    }
+  }
+
+  function refreshAllPreviews() {
+    for (const name of CHAR_NAMES) refreshSlotPreview(name);
+  }
+
+  function setActiveSlot(name) {
+    activeSlot = name;
+    for (const el of slotsContainer.querySelectorAll('.slot-item')) {
+      el.classList.toggle('active', el.dataset.name === name);
+    }
+    activeLabel.textContent = name;
+    refreshRightPanel();
+    drawOverlay();
+  }
+
+  // ── Right panel: layer editor ────────────────────────────────────────────────
+  function refreshRightPanel() {
+    // Large preview
+    compositeChar(largeCtx, activeSlot, 96, 96);
+
+    // Layer list
+    layerList.innerHTML = '';
+    const layers = charLayers[activeSlot] || [];
+
+    if (layers.length === 0) {
+      const msg = document.createElement('div');
+      msg.className = 'no-layers-msg';
+      msg.textContent = 'No layers. Click a tile to add one.';
+      layerList.appendChild(msg);
+    } else {
+      layers.forEach((tileId, idx) => {
+        const row = document.createElement('div');
+        row.className = 'layer-row';
+
+        const numEl = document.createElement('div');
+        numEl.className = 'layer-num';
+        numEl.textContent = idx;
+
+        const tileCvs = document.createElement('canvas');
+        tileCvs.className = 'layer-tile-canvas';
+        tileCvs.width  = 32;
+        tileCvs.height = 32;
+        drawSingleTile(tileCvs.getContext('2d'), tileId, 32, 32);
+
+        const idEl = document.createElement('div');
+        idEl.className = 'layer-tile-id';
+        idEl.textContent = 'tile ' + tileId;
+
+        const upBtn = document.createElement('button');
+        upBtn.className = 'layer-btn up';
+        upBtn.title = 'Move up';
+        upBtn.textContent = '\u2191';
+        upBtn.disabled = idx === 0;
+        upBtn.style.opacity = idx === 0 ? '0.3' : '1';
+        upBtn.dataset.action = 'up';
+        upBtn.dataset.idx = idx;
+
+        const rmBtn = document.createElement('button');
+        rmBtn.className = 'layer-btn remove';
+        rmBtn.title = 'Remove layer';
+        rmBtn.textContent = '\u2715';
+        rmBtn.dataset.action = 'remove';
+        rmBtn.dataset.idx = idx;
+
+        row.appendChild(numEl);
+        row.appendChild(tileCvs);
+        row.appendChild(idEl);
+        row.appendChild(upBtn);
+        row.appendChild(rmBtn);
+        layerList.appendChild(row);
+      });
+
+      // Clear all button
+      const clearBtn = document.createElement('button');
+      clearBtn.id = 'clear-btn';
+      clearBtn.textContent = 'Clear all layers';
+      clearBtn.dataset.action = 'clear';
+      layerList.appendChild(clearBtn);
+    }
+  }
+
+  // ── Event delegation for layer buttons ──────────────────────────────────────
+  layerList.addEventListener('click', (evt) => {
+    const btn = evt.target.closest('button[data-action]');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx, 10);
+    if (btn.dataset.action === 'remove') removeLayer(idx);
+    if (btn.dataset.action === 'up')     moveLayerUp(idx);
+    if (btn.dataset.action === 'clear')  clearAllLayers();
+  });
+
+  function addLayer(tileId) {
+    if (!charLayers[activeSlot]) charLayers[activeSlot] = [];
+    charLayers[activeSlot].push(tileId);
+    refreshSlotPreview(activeSlot);
+    refreshRightPanel();
+  }
+
+  function removeLayer(idx) {
+    charLayers[activeSlot].splice(idx, 1);
+    refreshSlotPreview(activeSlot);
+    refreshRightPanel();
+    drawOverlay();
+  }
+
+  function moveLayerUp(idx) {
+    if (idx === 0) return;
+    const layers = charLayers[activeSlot];
+    [layers[idx - 1], layers[idx]] = [layers[idx], layers[idx - 1]];
+    refreshSlotPreview(activeSlot);
+    refreshRightPanel();
+  }
+
+  function clearAllLayers() {
+    charLayers[activeSlot] = [];
+    refreshSlotPreview(activeSlot);
+    refreshRightPanel();
+    drawOverlay();
+  }
+
+  // ── Sheet drawing ────────────────────────────────────────────────────────────
+  function drawSheet() {
+    if (!sheetImg) return;
+    sheetCtx.imageSmoothingEnabled = false;
+    sheetCtx.clearRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+    sheetCtx.drawImage(
+      sheetImg,
+      0, 0, sheetImg.naturalWidth, sheetImg.naturalHeight,
+      0, 0, sheetCanvas.width, sheetCanvas.height
+    );
+  }
+
+  function drawOverlay() {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // Highlight tiles used by the active slot
+    const activeLayers = new Set(charLayers[activeSlot] || []);
+    for (const id of activeLayers) {
+      if (id < 0 || id >= COLS * ROWS) continue;
+      const { col, row } = tileCoords(id);
+      const dx = col * TILE_STEP * SCALE;
+      const dy = row * TILE_STEP * SCALE;
+      overlayCtx.fillStyle = 'rgba(245,158,11,0.18)';
+      overlayCtx.fillRect(dx, dy, TILE_W * SCALE, TILE_H * SCALE);
+      overlayCtx.strokeStyle = '#F59E0B';
+      overlayCtx.lineWidth = 1.5;
+      overlayCtx.strokeRect(dx + 0.5, dy + 0.5, TILE_W * SCALE - 1, TILE_H * SCALE - 1);
+    }
+
+    // Hovered tile
+    if (hoveredTile >= 0 && hoveredTile < COLS * ROWS) {
+      const { col, row } = tileCoords(hoveredTile);
+      const dx = col * TILE_STEP * SCALE;
+      const dy = row * TILE_STEP * SCALE;
+      overlayCtx.fillStyle = 'rgba(255,255,255,0.15)';
+      overlayCtx.fillRect(dx, dy, TILE_W * SCALE, TILE_H * SCALE);
+      overlayCtx.strokeStyle = '#ffffff';
+      overlayCtx.lineWidth = 1;
+      overlayCtx.strokeRect(dx + 0.5, dy + 0.5, TILE_W * SCALE - 1, TILE_H * SCALE - 1);
+    }
+  }
+
+  // ── Mouse interaction on sheet ───────────────────────────────────────────────
+  function canvasToTile(evt) {
+    const rect = sheetCanvas.getBoundingClientRect();
+    const mx = evt.clientX - rect.left;
+    const my = evt.clientY - rect.top;
+    const col = Math.floor(mx / (TILE_STEP * SCALE));
+    const row = Math.floor(my / (TILE_STEP * SCALE));
+    if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return -1;
+    return row * COLS + col;
+  }
+
+  wrapper.addEventListener('mousemove', (evt) => {
+    const id = canvasToTile(evt);
+    hoveredTile = id;
+    drawOverlay();
+
+    if (id >= 0) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (evt.clientX + 14) + 'px';
+      tooltip.style.top  = (evt.clientY - 8) + 'px';
+      const { col, row } = tileCoords(id);
+      tooltip.textContent = 'tile ' + id + '  (' + col + ', ' + row + ')';
+    } else {
+      tooltip.style.display = 'none';
+    }
+  });
+
+  wrapper.addEventListener('mouseleave', () => {
+    hoveredTile = -1;
+    drawOverlay();
+    tooltip.style.display = 'none';
+  });
+
+  wrapper.addEventListener('click', (evt) => {
+    const id = canvasToTile(evt);
+    if (id < 0) return;
+    addLayer(id);
+    drawOverlay();
+  });
+
+  // ── Copy JS ──────────────────────────────────────────────────────────────────
+  copyBtn.addEventListener('click', () => {
+    const maxLen = Math.max(...CHAR_NAMES.map(n => n.length));
+    const lines = CHAR_NAMES.map(name => {
+      const layers = charLayers[name] || [];
+      const pad = ' '.repeat(maxLen - name.length + 4);
+      return '  ' + name + ':' + pad + '[' + layers.join(', ') + '],';
+    });
+    const text = 'const CHAR_FRAMES = {\n' + lines.join('\n') + '\n};';
+
+    const done = (label) => {
+      copyStatus.textContent = label;
+      copyStatus.classList.add('ok');
+      setTimeout(() => {
+        copyStatus.textContent = 'Copies CHAR_FRAMES constant to clipboard';
+        copyStatus.classList.remove('ok');
+      }, 2000);
+    };
+
+    navigator.clipboard.writeText(text).then(() => done('Copied!')).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      done('Copied (fallback)!');
+    });
+  });
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  function init() {
+    buildSlots();
+    activeLabel.textContent = activeSlot;
+
+    const img = new Image();
+    img.onload = () => {
+      sheetImg = img;
+      const cw = img.naturalWidth  * SCALE;
+      const ch = img.naturalHeight * SCALE;
+      sheetCanvas.width    = cw;
+      sheetCanvas.height   = ch;
+      overlayCanvas.width  = cw;
+      overlayCanvas.height = ch;
+
+      drawSheet();
+      drawOverlay();
+      refreshAllPreviews();
+      refreshRightPanel();
+    };
+
+    img.onerror = () => {
+      loadError.style.display = 'block';
+      loadError.textContent =
+        'Could not load spritesheet at: ' + SHEET_PATH +
+        ' — serve from guild-quest root (e.g. npx serve .)';
+    };
+
+    img.src = SHEET_PATH;
+  }
+
+  init();
+</script>
+</body>
+</html>

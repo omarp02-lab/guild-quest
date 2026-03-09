@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tile Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #111; display: flex; flex-direction: column; gap: 0; }
+
+#bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: #1a1a2e;
+  border-bottom: 2px solid #4070c0;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  z-index: 10;
+  font: 13px monospace;
+  color: #ccc;
+}
+#bar strong { color: #80c0ff; font-size: 15px; }
+#tileinfo { color: #f0e060; font-size: 14px; }
+#preview {
+  width: 64px; height: 64px;
+  border: 2px solid #4070c0;
+  background: #222;
+  image-rendering: pixelated;
+}
+
+#sheets {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 56px 16px 32px;
+}
+.sheet-block { display: flex; flex-direction: column; gap: 8px; }
+.sheet-label { color: #888; font: 11px monospace; }
+canvas {
+  cursor: crosshair;
+  image-rendering: pixelated;
+  border: 1px solid #333;
+}
+canvas:hover { border-color: #4070c0; }
+
+#pinned {
+  position: fixed;
+  right: 16px; top: 60px;
+  width: 260px;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  padding: 10px;
+  font: 11px monospace;
+  color: #aaa;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+#pinned h3 { color: #80c0ff; margin-bottom: 8px; font-size: 12px; }
+#pinned .pin-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+#pinned canvas { border: 1px solid #555; cursor: default; }
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <strong>Tile Viewer</strong>
+  <canvas id="preview" width="64" height="64"></canvas>
+  <span id="tileinfo">Hover over any tile</span>
+  <span style="color:#666; font-size:11px;">Click to pin a tile • Both sheets shown below</span>
+</div>
+
+<div id="sheets">
+  <div class="sheet-block">
+    <div class="sheet-label">kenney_roguelike-rpg-pack / roguelikeSheet_transparent.png  —  16×16px tiles, 1px gap</div>
+    <canvas id="rpg"></canvas>
+  </div>
+  <div class="sheet-block">
+    <div class="sheet-label">kenney_tiny-town / tilemap_packed.png  —  16×16px tiles, 1px gap</div>
+    <canvas id="tiny"></canvas>
+  </div>
+  <div class="sheet-block">
+    <div class="sheet-label">kenney_roguelike-characters / roguelikeChar_transparent.png  —  16×16px tiles, 1px gap</div>
+    <canvas id="chars"></canvas>
+  </div>
+</div>
+
+<div id="pinned">
+  <h3>📌 Pinned tiles (click to pin)</h3>
+  <div id="pinlist"></div>
+</div>
+
+<script>
+'use strict';
+
+const TILE = 16, GAP = 1, STEP = 17;
+const SCALE = 3;
+
+const previewCtx = document.getElementById('preview').getContext('2d');
+previewCtx.imageSmoothingEnabled = false;
+
+const sheets = [
+  { id: 'rpg',   src: 'assets/kenney_roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png',     name: 'rpg' },
+  { id: 'tiny',  src: 'assets/kenney_tiny-town/Tilemap/tilemap_packed.png',                               name: 'tiny' },
+  { id: 'chars', src: 'assets/kenney_roguelike-characters/Spritesheet/roguelikeChar_transparent.png',     name: 'chars' },
+];
+
+function setupSheet({ id, src, name }) {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    const cols = Math.floor((img.width  + GAP) / STEP);
+    const rows = Math.floor((img.height + GAP) / STEP);
+
+    const cvs = document.getElementById(id);
+    const ctx = cvs.getContext('2d');
+    cvs.width  = img.width  * SCALE;
+    cvs.height = img.height * SCALE;
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, 0, 0, img.width * SCALE, img.height * SCALE);
+
+    // Grid overlay
+    ctx.strokeStyle = 'rgba(255, 80, 80, 0.25)';
+    ctx.lineWidth = 1;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        ctx.strokeRect(c * STEP * SCALE, r * STEP * SCALE, TILE * SCALE, TILE * SCALE);
+      }
+    }
+
+    function tileAt(e) {
+      const rect = cvs.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) / SCALE;
+      const my = (e.clientY - rect.top)  / SCALE;
+      const col = Math.floor(mx / STEP);
+      const row = Math.floor(my / STEP);
+      if (col < 0 || col >= cols || row < 0 || row >= rows) return null;
+      return { col, row, id: row * cols + col, sx: col * STEP, sy: row * STEP };
+    }
+
+    cvs.addEventListener('mousemove', e => {
+      const t = tileAt(e);
+      if (!t) return;
+      document.getElementById('tileinfo').textContent =
+        `[${name}]  ID: ${t.id}  |  col: ${t.col}  row: ${t.row}  |  x: ${t.sx}  y: ${t.sy}`;
+
+      // Hover highlight
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, img.width * SCALE, img.height * SCALE);
+      ctx.strokeStyle = 'rgba(255, 80, 80, 0.25)'; ctx.lineWidth = 1;
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+          ctx.strokeRect(c * STEP * SCALE, r * STEP * SCALE, TILE * SCALE, TILE * SCALE);
+
+      ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
+      ctx.strokeRect(t.col * STEP * SCALE, t.row * STEP * SCALE, TILE * SCALE, TILE * SCALE);
+
+      // Preview
+      previewCtx.clearRect(0, 0, 64, 64);
+      previewCtx.imageSmoothingEnabled = false;
+      previewCtx.drawImage(img, t.sx, t.sy, TILE, TILE, 0, 0, 64, 64);
+    });
+
+    cvs.addEventListener('click', e => {
+      const t = tileAt(e);
+      if (!t) return;
+
+      const pinCvs = document.createElement('canvas');
+      pinCvs.width = 32; pinCvs.height = 32;
+      const pCtx = pinCvs.getContext('2d');
+      pCtx.imageSmoothingEnabled = false;
+      pCtx.drawImage(img, t.sx, t.sy, TILE, TILE, 0, 0, 32, 32);
+
+      const row = document.createElement('div');
+      row.className = 'pin-row';
+
+      const label = document.createElement('span');
+      label.textContent = `[${name}] id:${t.id}  c:${t.col} r:${t.row}`;
+      label.style.cursor = 'pointer';
+      label.title = 'Click to remove';
+      label.onclick = () => row.remove();
+
+      row.appendChild(pinCvs);
+      row.appendChild(label);
+      document.getElementById('pinlist').prepend(row);
+    });
+  };
+}
+
+sheets.forEach(setupSheet);
+</script>
+</body>
+</html>

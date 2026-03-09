@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Guild Village</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 10px;
+}
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+  border: 3px solid #2a2a3a;
+  box-shadow: 0 0 80px rgba(0,0,0,0.95);
+}
+#status { color: #555; font: 11px monospace; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<p id="status">Loading…</p>
+
+<script>
+'use strict';
+
+const SCALE = 2;
+const TILE  = 16;
+const TS    = TILE * SCALE;
+
+const cvs = document.getElementById('c');
+const ctx = cvs.getContext('2d');
+
+// ── Images ────────────────────────────────────────────────────────────────
+const IMG_PACKED = new Image(); // tilemap_packed.png — 12×11, no spacing, step=16
+IMG_PACKED.src = 'assets/kenney_tiny-town/Tilemap/tilemap_packed.png';
+
+const IMG_SPACED = new Image(); // tilemap.png — 12×11, spacing=1, step=17
+IMG_SPACED.src = 'assets/kenney_tiny-town/Tilemap/tilemap.png';
+
+// ── Tilesets (mirrors village.tmj tilesets array) ─────────────────────────
+//   tiny-town : firstgid=1,   11 cols, step=17, tilemap_packed.png
+//   Take 2    : firstgid=111, 12 cols, step=16, tilemap_packed.png
+//   tiles2    : firstgid=243, 12 cols, step=17, tilemap.png
+const TILESETS = [
+  { firstgid: 1,   cols: 11, step: 17, img: IMG_PACKED },
+  { firstgid: 111, cols: 12, step: 16, img: IMG_PACKED },
+  { firstgid: 243, cols: 12, step: 17, img: IMG_SPACED },
+];
+
+// ── Resolve which tileset owns a GID ──────────────────────────────────────
+function tilesetFor(gid) {
+  let ts = TILESETS[0];
+  for (const t of TILESETS) { if (gid >= t.firstgid) ts = t; }
+  return ts;
+}
+
+// ── Tiled flip-flag constants ──────────────────────────────────────────────
+const H_FLIP   = 0x80000000; // mirror left-right
+const V_FLIP   = 0x40000000; // mirror top-bottom
+const D_FLIP   = 0x20000000; // anti-diagonal (transpose)
+const FLAG_ALL = H_FLIP | V_FLIP | D_FLIP;
+
+// ── Draw one tile (GID may carry flip flags) ──────────────────────────────
+function drawGid(gid, tx, ty) {
+  if (!gid) return;
+
+  const flipH = (gid & H_FLIP) !== 0;
+  const flipV = (gid & V_FLIP) !== 0;
+  const flipD = (gid & D_FLIP) !== 0;
+  const id    = gid & ~FLAG_ALL;
+  if (!id) return;
+
+  const ts    = tilesetFor(id);
+  const local = id - ts.firstgid;
+  const sx    = (local % ts.cols) * ts.step;
+  const sy    = Math.floor(local / ts.cols) * ts.step;
+
+  const dx = tx * TS;
+  const dy = ty * TS;
+
+  ctx.save();
+  ctx.translate(dx + TS / 2, dy + TS / 2);
+
+  // All 8 flip/rotation combos from Tiled's spec
+  if      ( flipD && !flipH && !flipV) { ctx.rotate( Math.PI / 2); ctx.scale( 1, -1); }
+  else if ( flipD &&  flipH && !flipV) { ctx.rotate( Math.PI / 2);                    }
+  else if ( flipD && !flipH &&  flipV) { ctx.rotate(-Math.PI / 2);                    }
+  else if ( flipD &&  flipH &&  flipV) { ctx.rotate(-Math.PI / 2); ctx.scale( 1, -1); }
+  else if (!flipD &&  flipH && !flipV) { ctx.scale(-1,  1);                            }
+  else if (!flipD && !flipH &&  flipV) { ctx.scale( 1, -1);                            }
+  else if (!flipD &&  flipH &&  flipV) { ctx.rotate(Math.PI);                          }
+
+  ctx.drawImage(ts.img, sx, sy, TILE, TILE, -TS / 2, -TS / 2, TS, TS);
+  ctx.restore();
+}
+
+// ── Render all tile layers ─────────────────────────────────────────────────
+function render(map) {
+  cvs.width  = map.width  * TS;
+  cvs.height = map.height * TS;
+  ctx.imageSmoothingEnabled = false;
+
+  for (const layer of map.layers) {
+    if (layer.type !== 'tilelayer' || !layer.visible) continue;
+    const { data, width } = layer;
+    for (let i = 0; i < data.length; i++) {
+      if (!data[i]) continue;
+      drawGid(data[i], i % width, Math.floor(i / width));
+    }
+  }
+
+  document.getElementById('status').textContent =
+    `Guild Village  ·  ${map.width} × ${map.height} tiles`;
+}
+
+// ── Boot — wait for both images then fetch map ────────────────────────────
+let loaded = 0;
+function onImageLoad() {
+  if (++loaded < 2) return;
+  fetch('village.tmj?v=' + Date.now())
+    .then(r => r.json())
+    .then(render)
+    .catch(() => {
+      document.getElementById('status').textContent =
+        'Needs a local server — run:  npx serve .  then open the village.html URL';
+    });
+}
+IMG_PACKED.onload = onImageLoad;
+IMG_SPACED.onload = onImageLoad;
+</script>
+</body>
+</html>

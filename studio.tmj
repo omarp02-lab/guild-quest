@@ -1,0 +1,136 @@
+{ "compressionlevel":-1,
+ "height":6,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[97, 98, 98, 99,
+            109, 110, 110, 111,
+            109, 110, 110, 111,
+            109, 110, 110, 111,
+            109, 110, 110, 111,
+            121, 110, 110, 123],
+         "height":6,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":4,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0,
+            270, 372, 373, 271,
+            0, 678, 0, 0,
+            0, 0, 323, 322,
+            0, 0, 0, 0,
+            0, 0, 0, 0],
+         "height":6,
+         "id":2,
+         "name":"Tile Layer 2",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":4,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":3,
+         "name":"Object Layer 1",
+         "objects":[
+                {
+                 "height":15.5204153882464,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":46.2213830540477,
+                 "x":8.8364408779797,
+                 "y":16.540004720321
+                }, 
+                {
+                 "height":10.4224687278735,
+                 "id":2,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":10.8756195421289,
+                 "x":18.9190464951617,
+                 "y":36.7052159546849
+                }, 
+                {
+                 "height":12.235071984895,
+                 "id":3,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":10.082605617182,
+                 "x":34.8926126976634,
+                 "y":51.772480528676
+                }, 
+                {
+                 "height":16.4267170167571,
+                 "id":4,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":5.32452206750059,
+                 "x":47.6941232003776,
+                 "y":47.5808354968138
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":4,
+         "name":"npc",
+         "objects":[
+                {
+                 "height":0,
+                 "id":5,
+                 "name":"",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":23.4505546377154,
+                 "y":57.6634411139958
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":5,
+ "nextobjectid":6,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.11.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"..\/..\/Take 2.tsx"
+        }, 
+        {
+         "firstgid":133,
+         "source":"like2.tsx"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.10",
+ "width":4
+}

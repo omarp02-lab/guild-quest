@@ -1,0 +1,204 @@
+{ "compressionlevel":-1,
+ "height":7,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[97, 98, 98, 98, 98, 98, 98, 98, 98, 99,
+            109, 110, 110, 110, 110, 110, 110, 110, 110, 111,
+            109, 110, 110, 110, 110, 110, 110, 110, 110, 111,
+            109, 110, 110, 110, 110, 110, 110, 110, 110, 111,
+            109, 110, 110, 110, 110, 110, 110, 110, 110, 111,
+            109, 110, 110, 110, 110, 110, 110, 110, 110, 111,
+            121, 122, 122, 122, 122, 122, 110, 110, 122, 123],
+         "height":7,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 262, 0, 261, 0, 262, 0, 262, 0,
+            0, 0, 262, 0, 262, 0, 262, 0, 262, 0,
+            0, 332, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 389, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 330, 331, 331, 445, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":7,
+         "id":2,
+         "name":"Tile Layer 2",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":3,
+         "name":"Object Layer 1",
+         "objects":[
+                {
+                 "height":14.578197020045,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.7787544216958,
+                 "x":32.072033444099,
+                 "y":17.3223282238182
+                }, 
+                {
+                 "height":14.2351806195734,
+                 "id":2,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.4357380212241,
+                 "x":32.072033444099,
+                 "y":33.4440990459856
+                }, 
+                {
+                 "height":14.2351806195734,
+                 "id":3,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16.4647872226391,
+                 "x":63.4580340872548,
+                 "y":17.6653446242898
+                }, 
+                {
+                 "height":13.8921642191017,
+                 "id":4,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.9502626219316,
+                 "x":63.6295422874906,
+                 "y":33.6156072462215
+                }, 
+                {
+                 "height":14.4066888198092,
+                 "id":5,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.7787544216958,
+                 "x":96.0445921320613,
+                 "y":17.6653446242898
+                }, 
+                {
+                 "height":14.2351806195734,
+                 "id":6,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.9502626219316,
+                 "x":95.8730839318255,
+                 "y":33.7871154464573
+                }, 
+                {
+                 "height":14.2351806195734,
+                 "id":7,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.7787544216958,
+                 "x":127.773609175689,
+                 "y":33.9586236466931
+                }, 
+                {
+                 "height":14.2351806195734,
+                 "id":8,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.7787544216958,
+                 "x":127.945117375925,
+                 "y":18.0083610247615
+                }, 
+                {
+                 "height":10.9765248150927,
+                 "id":9,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":63.4580340872548,
+                 "x":16.1217708221674,
+                 "y":84.5535427162611
+                }, 
+                {
+                 "height":32.5865580448065,
+                 "id":10,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":15.7787544216958,
+                 "x":16.1217708221674,
+                 "y":47.3362632650874
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":4,
+         "name":"npc",
+         "objects":[
+                {
+                 "height":0,
+                 "id":11,
+                 "name":"",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":56.9407224782935,
+                 "y":73.4055097009326
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":5,
+ "nextobjectid":12,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.11.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"..\/..\/Take 2.tsx"
+        }, 
+        {
+         "firstgid":133,
+         "source":"like2.tsx"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.10",
+ "width":10
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guild Quest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+
+  <!-- Game canvas lives here -->
+  <div id="game-container"></div>
+
+  <!-- ── Character Creation Overlay ────────────────────────────────────── -->
+  <div id="char-create" class="overlay">
+    <div class="panel">
+      <p class="eyebrow">✦ GUILD QUEST ✦</p>
+      <h1>Discover Your<br/>Next Skill</h1>
+      <p class="sub">Explore the village to reveal the skills<br/>that are right for you.</p>
+
+      <div class="field">
+        <label for="hero-name">YOUR NAME</label>
+        <input id="hero-name" type="text" maxlength="10" placeholder="HERO" autocomplete="off" />
+      </div>
+
+      <p class="field-label">CHOOSE YOUR HERO</p>
+      <div class="archetypes">
+        <button class="arch" data-arch="1"><canvas class="hero-canvas" id="hero-canvas-1" width="48" height="48"></canvas></button>
+        <button class="arch" data-arch="2"><canvas class="hero-canvas" id="hero-canvas-2" width="48" height="48"></canvas></button>
+        <button class="arch" data-arch="3"><canvas class="hero-canvas" id="hero-canvas-3" width="48" height="48"></canvas></button>
+        <button class="arch" data-arch="4"><canvas class="hero-canvas" id="hero-canvas-4" width="48" height="48"></canvas></button>
+        <button class="arch" data-arch="5"><canvas class="hero-canvas" id="hero-canvas-5" width="48" height="48"></canvas></button>
+      </div>
+
+      <button id="begin-btn" disabled>▶ BEGIN QUEST</button>
+    </div>
+  </div>
+
+  <!-- ── Results Overlay ───────────────────────────────────────────────── -->
+  <div id="results" class="overlay hidden">
+    <div class="panel results-panel">
+
+      <div class="results-header">
+        <p class="eyebrow">YOUR QUEST RESULTS</p>
+        <p id="result-counter" class="result-counter">1 / 1</p>
+      </div>
+
+      <div id="result-icon" class="result-icon">⚔️</div>
+      <h2 id="result-skill">—</h2>
+      <div id="result-cats" class="result-cats"></div>
+      <p id="result-paid-note" class="result-paid-note" style="display:none">
+        ⚠ Paid options — free resources may be limited
+      </p>
+
+      <div class="divider"></div>
+
+      <p class="field-label">TOP WAYS TO START</p>
+      <p class="result-filter-note" id="result-filter-note" style="display:none"></p>
+      <div id="result-resources"></div>
+
+      <a id="result-link" href="#" target="_blank" rel="noopener" class="btn-primary">
+        EXPLORE ON GUILD →
+      </a>
+
+      <div class="result-nav">
+        <button id="result-prev" class="btn-nav">← PREV</button>
+        <button id="result-next" class="btn-nav">NEXT →</button>
+      </div>
+
+      <button id="play-again" class="btn-ghost">PLAY AGAIN</button>
+
+    </div>
+  </div>
+
+  <!-- ── Scripts (order matters — no ES modules) ───────────────────────── -->
+  <script src="game/data/skills.js"></script>
+  <script src="game/data/recommend.js"></script>
+  <script src="game/data/npcs.js"></script>
+  <script src="game/objects/DialogueBox.js"></script>
+  <script src="game/scenes/Preload.js"></script>
+  <script src="game/scenes/CharacterCreate.js"></script>
+  <script src="game/scenes/Village.js"></script>
+  <script src="game/scenes/Interior.js"></script>
+  <script src="game/scenes/GuildMaster.js"></script>
+  <script src="game/scenes/Results.js"></script>
+  <script src="game/main.js"></script>
+
+</body>
+</html>
