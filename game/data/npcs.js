@@ -60,8 +60,9 @@ GQ.NPC_DATA = {
     mapKey:   'market-map',
     lines:    [
       "Ahh, a traveler! Come, come — I'd like your advice.",
-      'I have two items that I just put out. Which do you think is a better value?',
-      "THE RARE TOME — ancient knowledge. Powerful. Costs 45 gold (a tidy sum). Or THE OLD SCROLL — worn but imparts some useful wisdom. Won't cost you a coin. Which do you think is the better deal?",
+      'I have two items that I just put out.',
+      "THE RARE TOME — ancient knowledge, powerful, costs 45 gold. Or THE OLD SCROLL — worn but useful wisdom, completely free.",
+      'Which do you think is the better deal?',
     ],
     choices: [
       { label: 'The Rare Tome (45g) is worth it', value: { key: 'budget', val: 'any'  } },
