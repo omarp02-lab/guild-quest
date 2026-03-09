@@ -371,7 +371,7 @@ GQ.Village = class Village extends Phaser.Scene {
     }
 
     if (npc.isSign) {
-      this._dialogueOpen = true;
+      this._setDialogueOpen(true);
       this._dialogue.show('NOTICE', [
         'Wisdom awaits. Speak with the Guildmaster... but only after you speak with the villagers.',
       ], null, () => { this._dialogueOpen = false; });
@@ -406,7 +406,7 @@ GQ.Village = class Village extends Phaser.Scene {
       if (value === 'yes') {
         this._runNPCDialogue(npc);
       } else {
-        this._dialogueOpen = false;
+        this._setDialogueOpen(false);
       }
     });
   }
@@ -418,11 +418,11 @@ GQ.Village = class Village extends Phaser.Scene {
       const postLine = (value && value.postLine) || def.postLine;
       if (value && postLine) {
         this._dialogue.show(npc.name, [postLine], null, () => {
-          this._dialogueOpen = false;
+          this._setDialogueOpen(false);
           this._applyChoice(value);
         });
       } else {
-        this._dialogueOpen = false;
+        this._setDialogueOpen(false);
         if (value) this._applyChoice(value);
       }
     });
@@ -521,6 +521,12 @@ GQ.Village = class Village extends Phaser.Scene {
     this._pips.forEach((p, i) => p.classList.toggle('done', i < n));
   }
 
+  _setDialogueOpen (val) {
+    this._dialogueOpen = val;
+    const dpad = document.getElementById('dpad');
+    if (dpad) dpad.style.visibility = val ? 'hidden' : 'visible';
+  }
+
   _showAnnouncement (msg) {
     this._annText.setText(msg).setAlpha(1);
     this.tweens.killTweensOf(this._annText);
@@ -593,7 +599,8 @@ GQ.Village = class Village extends Phaser.Scene {
 
     // Delay so Phaser's scale manager has time to position the canvas
     this.time.delayedCall(150, () => this._placeDpad());
-    window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
+    this._resizeHandler = () => this._placeDpad();
+    window.addEventListener('resize', this._resizeHandler);
   }
 
   _placeDpad () {
@@ -614,5 +621,6 @@ GQ.Village = class Village extends Phaser.Scene {
     const bar = document.getElementById('progress-bar');
     if (bar) bar.style.display = 'none';
     document.getElementById('dpad')?.remove();
+    window.removeEventListener('resize', this._resizeHandler);
   }
 };

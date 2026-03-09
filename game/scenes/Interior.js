@@ -284,19 +284,19 @@ GQ.Interior = class Interior extends Phaser.Scene {
           business_career: 'the Inn Keeper', home_trade: 'the Mason', music: 'the Bard',
         };
         const missing = REQUIRED.filter(k => !completed.has(k)).map(k => NPC_NAMES[k]);
-        this._dialogueOpen = true;
+        this._setDialogueOpen(true);
         this._dialogue.show('GUILD MASTER',
           ['Your journey is not yet complete.', `You still need to speak with ${missing.join(', ')}.`],
           null, () => { this._dialogueOpen = false; });
         return;
       }
-      this._dialogueOpen = true;
+      this._setDialogueOpen(true);
       this._dialogue.show('GUILD MASTER', [
         'Ahh... I have watched your journey through the village.',
         'Your choices have spoken louder than words ever could.',
         'Come with me. Your path is waiting.',
       ], null, () => {
-        this._dialogueOpen = false;
+        this._setDialogueOpen(false);
         document.getElementById('dpad')?.remove();
         this.scene.start('GuildMaster', { profile: window.GQ.profile });
       });
@@ -307,7 +307,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const questKey = data.craftRole || data.choices?.[0]?.value?.key;
     const checkKey = data.craftRole === 'crafts' ? 'crafts' : questKey;
     if (checkKey && completed.has(checkKey)) {
-      this._dialogueOpen = true;
+      this._setDialogueOpen(true);
       window.GQ.dismissed = window.GQ.dismissed || new Set();
       if (!window.GQ.dismissed.has(checkKey)) {
         window.GQ.dismissed.add(checkKey);
@@ -322,7 +322,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
         if (value === 'yes') {
           this._runNPCDialogue(npc);
         } else {
-          this._dialogueOpen = false;
+          this._setDialogueOpen(false);
         }
       });
       return;
@@ -351,7 +351,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
               ['I always find the interests of others so fascinating!'],
               null,
               () => {
-                this._dialogueOpen = false;
+                this._setDialogueOpen(false);
                 this._complete('crafts', 'CREATIVE INTERESTS NOTED ✓');
               }
             );
@@ -366,11 +366,11 @@ GQ.Interior = class Interior extends Phaser.Scene {
       const postLine = (value && value.postLine) || data.postLine;
       if (value && postLine) {
         this._dialogue.show(npc.name, [postLine], null, () => {
-          this._dialogueOpen = false;
+          this._setDialogueOpen(false);
           this._applyChoice(value);
         });
       } else {
-        this._dialogueOpen = false;
+        this._setDialogueOpen(false);
         if (value) this._applyChoice(value);
       }
     });
@@ -401,6 +401,12 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const completed = window.GQ.completed || new Set();
     const REQUIRED  = ['budget','structure','level','crafts','languages','technology','business_career','home_trade','music'];
     return REQUIRED.every(k => completed.has(k));
+  }
+
+  _setDialogueOpen (val) {
+    this._dialogueOpen = val;
+    const dpad = document.getElementById('dpad');
+    if (dpad) dpad.style.visibility = val ? 'hidden' : 'visible';
   }
 
   _showAnnouncement (msg) {
@@ -496,15 +502,8 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
     // Delay so Phaser's scale manager has time to position the canvas
     this.time.delayedCall(150, () => this._placeDpad());
-    window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
-  }
-
-  _updatePortraitWarn () {
-    const warn = document.getElementById('portrait-warn');
-    if (!warn) return;
-    const portrait = window.innerHeight > window.innerWidth;
-    warn.style.display = (portrait && window.matchMedia('(pointer: coarse)').matches) ? 'flex' : 'none';
-    if (!portrait) this._placeDpad();
+    this._resizeHandler = () => this._placeDpad();
+    window.addEventListener('resize', this._resizeHandler);
   }
 
   _placeDpad () {
@@ -522,5 +521,6 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
   shutdown () {
     document.getElementById('dpad')?.remove();
+    window.removeEventListener('resize', this._resizeHandler);
   }
 };
