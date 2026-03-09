@@ -55,12 +55,6 @@ GQ.Village = class Village extends Phaser.Scene {
     // ── Music ───────────────────────────────────────────────────────
     GQ.Audio.play(this, 'music-village');
 
-    // ── Portrait warning (show if needed, update on rotate) ──────────
-    this._updatePortraitWarn();
-    this._orientHandler = () => this._updatePortraitWarn();
-    window.addEventListener('orientationchange', this._orientHandler);
-    window.addEventListener('resize', this._orientHandler);
-
     // ── Tiled map background + door/collision rects ──────────────────
     this._drawMap();
 
@@ -94,7 +88,7 @@ GQ.Village = class Village extends Phaser.Scene {
     this._buildDpad();
 
     // ── Announcement banner (fixed) ──────────────────────────────────
-    this._annText = this.add.text(400, 28, '', {
+    this._annText = this.add.text(this.scale.width / 2, 28, '', {
       fontFamily: "'Press Start 2P'",
       fontSize:   '9px',
       color:      '#F59E0B',
@@ -486,17 +480,18 @@ GQ.Village = class Village extends Phaser.Scene {
   _buildControlsHUD () {
     this._controlsHud = null;
     if (window.GQ.controlsDismissed) return;
+    const hx  = this.scale.width - 192;
     const hud = this.add.graphics().setDepth(18).setScrollFactor(0);
     hud.fillStyle(0x1A1612, 0.88);
-    hud.fillRect(608, 6, 186, 58);
+    hud.fillRect(hx, 6, 186, 58);
     hud.lineStyle(2, 0x5a5248);
-    hud.strokeRect(608, 6, 186, 58);
-    const heading = this.add.text(614, 14, 'CONTROLS', {
+    hud.strokeRect(hx, 6, 186, 58);
+    const heading = this.add.text(hx + 6, 14, 'CONTROLS', {
       fontFamily: "'Press Start 2P'",
       fontSize:   '6px',
       color:      '#F59E0B',
     }).setDepth(19).setScrollFactor(0);
-    const txt = this.add.text(614, 30, 'Use keyboard arrows to move', {
+    const txt = this.add.text(hx + 6, 30, 'Use keyboard arrows to move', {
       fontFamily: "'Press Start 2P'",
       fontSize:   '6px',
       color:      '#a89f94',
@@ -601,14 +596,6 @@ GQ.Village = class Village extends Phaser.Scene {
     window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
   }
 
-  _updatePortraitWarn () {
-    const warn = document.getElementById('portrait-warn');
-    if (!warn) return;
-    const portrait = window.innerHeight > window.innerWidth;
-    warn.style.display = (portrait && window.matchMedia('(pointer: coarse)').matches) ? 'flex' : 'none';
-    if (!portrait) this._placeDpad();
-  }
-
   _placeDpad () {
     const canvas = document.querySelector('#game-container canvas');
     const dpad   = document.getElementById('dpad');
@@ -627,9 +614,5 @@ GQ.Village = class Village extends Phaser.Scene {
     const bar = document.getElementById('progress-bar');
     if (bar) bar.style.display = 'none';
     document.getElementById('dpad')?.remove();
-    const warn = document.getElementById('portrait-warn');
-    if (warn) warn.style.display = 'none';
-    window.removeEventListener('orientationchange', this._orientHandler);
-    window.removeEventListener('resize', this._orientHandler);
   }
 };

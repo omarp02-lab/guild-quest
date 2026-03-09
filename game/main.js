@@ -2,13 +2,11 @@
 
 const config = {
   type:            Phaser.AUTO,
-  width:           800,
-  height:          560,
   backgroundColor: '#0d0a0e',
   parent:          'game-container',
   pixelArt:        true,
   scale: {
-    mode:       Phaser.Scale.FIT,
+    mode:       Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.NO_CENTER,
   },
   scene: [

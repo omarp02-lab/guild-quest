@@ -26,12 +26,6 @@ GQ.Interior = class Interior extends Phaser.Scene {
     // ── Music ──────────────────────────────────────────────────────
     GQ.Audio.play(this, 'music-interior');
 
-    // ── Portrait warning ────────────────────────────────────────────
-    this._updatePortraitWarn();
-    this._orientHandler = () => this._updatePortraitWarn();
-    window.addEventListener('orientationchange', this._orientHandler);
-    window.addEventListener('resize', this._orientHandler);
-
     // ── Draw interior map ──────────────────────────────────────────
     this._drawMap();
 
@@ -59,7 +53,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
     this._buildDpad();
 
     // ── Announcement text ──────────────────────────────────────────
-    this._annText = this.add.text(400, 28, '', {
+    this._annText = this.add.text(this.scale.width / 2, 28, '', {
       fontFamily: "'Press Start 2P'",
       fontSize:   '9px',
       color:      '#F59E0B',
@@ -122,16 +116,18 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const mapData = this.cache.json.get(this._mapKey);
 
     // Calculate scale to fit the interior in the viewport with padding
+    const vw    = this.scale.width;
+    const vh    = this.scale.height;
     const SCALE = Math.min(
-      Math.floor(760 / (mapData.width  * TILE)),
-      Math.floor(520 / (mapData.height * TILE))
+      Math.floor((vw - 40) / (mapData.width  * TILE)),
+      Math.floor((vh - 40) / (mapData.height * TILE))
     );
     const TS = TILE * SCALE;
     const W  = mapData.width  * TS;
     const H  = mapData.height * TS;
 
-    this._ox    = Math.floor((800 - W) / 2);
-    this._oy    = Math.floor((560 - H) / 2);
+    this._ox    = Math.floor((vw - W) / 2);
+    this._oy    = Math.floor((vh - H) / 2);
     this._mapW  = W;
     this._mapH  = H;
     this._scale = SCALE;
@@ -526,9 +522,5 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
   shutdown () {
     document.getElementById('dpad')?.remove();
-    const warn = document.getElementById('portrait-warn');
-    if (warn) warn.style.display = 'none';
-    window.removeEventListener('orientationchange', this._orientHandler);
-    window.removeEventListener('resize', this._orientHandler);
   }
 };
