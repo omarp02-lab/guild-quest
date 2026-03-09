@@ -26,6 +26,12 @@ GQ.Interior = class Interior extends Phaser.Scene {
     // ── Music ──────────────────────────────────────────────────────
     GQ.Audio.play(this, 'music-interior');
 
+    // ── Portrait warning ────────────────────────────────────────────
+    this._updatePortraitWarn();
+    this._orientHandler = () => this._updatePortraitWarn();
+    window.addEventListener('orientationchange', this._orientHandler);
+    window.addEventListener('resize', this._orientHandler);
+
     // ── Draw interior map ──────────────────────────────────────────
     this._drawMap();
 
@@ -496,6 +502,14 @@ GQ.Interior = class Interior extends Phaser.Scene {
     window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
   }
 
+  _updatePortraitWarn () {
+    const warn = document.getElementById('portrait-warn');
+    if (!warn) return;
+    const portrait = window.innerHeight > window.innerWidth;
+    warn.style.display = (portrait && window.matchMedia('(pointer: coarse)').matches) ? 'flex' : 'none';
+    if (!portrait) this._placeDpad();
+  }
+
   _placeDpad () {
     const canvas = document.querySelector('#game-container canvas');
     const dpad   = document.getElementById('dpad');
@@ -507,5 +521,9 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
   shutdown () {
     document.getElementById('dpad')?.remove();
+    const warn = document.getElementById('portrait-warn');
+    if (warn) warn.style.display = 'none';
+    window.removeEventListener('orientationchange', this._orientHandler);
+    window.removeEventListener('resize', this._orientHandler);
   }
 };

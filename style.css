@@ -482,9 +482,7 @@ html, body {
   letter-spacing: 0.1em;
 }
 
-@media (orientation: portrait) and (pointer: coarse) {
-  #portrait-warn { display: flex; }
-}
+/* shown/hidden by JS after character creation */
 
 /* ── Mute Button ───────────────────────────────────────────────────────── */
 #mute-btn {

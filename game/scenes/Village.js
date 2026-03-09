@@ -55,6 +55,12 @@ GQ.Village = class Village extends Phaser.Scene {
     // ── Music ───────────────────────────────────────────────────────
     GQ.Audio.play(this, 'music-village');
 
+    // ── Portrait warning (show if needed, update on rotate) ──────────
+    this._updatePortraitWarn();
+    this._orientHandler = () => this._updatePortraitWarn();
+    window.addEventListener('orientationchange', this._orientHandler);
+    window.addEventListener('resize', this._orientHandler);
+
     // ── Tiled map background + door/collision rects ──────────────────
     this._drawMap();
 
@@ -594,6 +600,14 @@ GQ.Village = class Village extends Phaser.Scene {
     window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
   }
 
+  _updatePortraitWarn () {
+    const warn = document.getElementById('portrait-warn');
+    if (!warn) return;
+    const portrait = window.innerHeight > window.innerWidth;
+    warn.style.display = (portrait && window.matchMedia('(pointer: coarse)').matches) ? 'flex' : 'none';
+    if (!portrait) this._placeDpad();
+  }
+
   _placeDpad () {
     const canvas = document.querySelector('#game-container canvas');
     const dpad   = document.getElementById('dpad');
@@ -607,5 +621,9 @@ GQ.Village = class Village extends Phaser.Scene {
     const bar = document.getElementById('progress-bar');
     if (bar) bar.style.display = 'none';
     document.getElementById('dpad')?.remove();
+    const warn = document.getElementById('portrait-warn');
+    if (warn) warn.style.display = 'none';
+    window.removeEventListener('orientationchange', this._orientHandler);
+    window.removeEventListener('resize', this._orientHandler);
   }
 };
