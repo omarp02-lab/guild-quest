@@ -498,7 +498,8 @@ GQ.Interior = class Interior extends Phaser.Scene {
       });
     }
 
-    this._placeDpad();
+    // Delay so Phaser's scale manager has time to position the canvas
+    this.time.delayedCall(150, () => this._placeDpad());
     window.addEventListener('resize', this._placeDpad.bind(this), { once: true });
   }
 

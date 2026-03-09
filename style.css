@@ -16,13 +16,17 @@ html, body {
   width: 100%; height: 100%;
   background: #0d0a0e;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Game Canvas Container ─────────────────────────────────────────────── */
 #game-container {
-  position: fixed;
-  inset: 0;
+  position: relative;
   z-index: 1;
+  width: 100%;
+  height: 100%;
 }
 
 #game-container canvas {
@@ -424,13 +428,15 @@ html, body {
 /* ── Mobile touch D-pad ────────────────────────────────────────────────── */
 #dpad {
   position: fixed;
+  left: 16px;
+  bottom: 24px;
   z-index: 50;
   display: none;
   user-select: none;
   grid-template-columns: 38px 38px 38px;
   grid-template-rows: 38px 38px 38px;
   gap: 3px;
-  /* left/bottom set dynamically by JS to sit over the game canvas */
+  /* left/bottom overridden by JS to sit over the game canvas */
 }
 
 @media (max-width: 768px), (pointer: coarse) {

@@ -47,6 +47,10 @@ GQ.CharacterCreate = class CharacterCreate extends Phaser.Scene {
     });
 
     beginBtn.addEventListener('click', () => {
+      // Resume AudioContext now — this click IS the required user gesture
+      const ctx = this.sound.context;
+      if (ctx && ctx.state === 'suspended') ctx.resume();
+
       const name = nameInput.value.trim() || 'HERO';
       window.GQ.player = { name: name.toUpperCase(), archetype: selectedArch };
 
