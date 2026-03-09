@@ -516,6 +516,10 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const dpad   = document.getElementById('dpad');
     if (!canvas || !dpad) return;
     const r = canvas.getBoundingClientRect();
+    if (r.width === 0) {
+      this.time.delayedCall(100, () => this._placeDpad());
+      return;
+    }
     dpad.style.left   = (r.left   + 16) + 'px';
     dpad.style.bottom = (window.innerHeight - r.bottom + 24) + 'px';
   }

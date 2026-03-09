@@ -614,6 +614,11 @@ GQ.Village = class Village extends Phaser.Scene {
     const dpad   = document.getElementById('dpad');
     if (!canvas || !dpad) return;
     const r = canvas.getBoundingClientRect();
+    if (r.width === 0) {
+      // Canvas not yet laid out — retry
+      this.time.delayedCall(100, () => this._placeDpad());
+      return;
+    }
     dpad.style.left   = (r.left   + 16) + 'px';
     dpad.style.bottom = (window.innerHeight - r.bottom + 24) + 'px';
   }
