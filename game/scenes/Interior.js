@@ -30,12 +30,14 @@ GQ.Interior = class Interior extends Phaser.Scene {
     this._drawMap();
 
     // ── Player at center-bottom of interior ────────────────────────
-    const arch = (window.GQ.player && window.GQ.player.archetype) || '1';
+    const arch        = (window.GQ.player && window.GQ.player.archetype) || '1';
+    const isMobile    = window.matchMedia('(pointer: coarse)').matches;
+    const spriteScale = isMobile ? 2 : 4;
     this._player = this.add.image(
       this._ox + this._mapW / 2,
       this._oy + this._mapH - 24,
       `hero_${arch}`
-    ).setDepth(5).setScale(4);
+    ).setDepth(5).setScale(spriteScale);
 
     // ── Input ──────────────────────────────────────────────────────
     this._cursors  = this.input.keyboard.createCursorKeys();
@@ -68,15 +70,22 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const dt     = delta / 1000;
     const speed  = 160;
     const player = this._player;
-    const td     = this._touchDir;
 
     let dx = 0, dy = 0;
-    if (this._cursors.left.isDown  || this._wasd.A.isDown || td.x < -0.35) dx = -speed;
-    if (this._cursors.right.isDown || this._wasd.D.isDown || td.x >  0.35) dx =  speed;
-    if (this._cursors.up.isDown    || this._wasd.W.isDown || td.y < -0.35) dy = -speed;
-    if (this._cursors.down.isDown  || this._wasd.S.isDown || td.y >  0.35) dy =  speed;
-
+    if (this._cursors.left.isDown  || this._wasd.A.isDown) dx = -speed;
+    if (this._cursors.right.isDown || this._wasd.D.isDown) dx =  speed;
+    if (this._cursors.up.isDown    || this._wasd.W.isDown) dy = -speed;
+    if (this._cursors.down.isDown  || this._wasd.S.isDown) dy =  speed;
     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+
+    // Touch destination: walk toward tapped/dragged point
+    if (dx === 0 && dy === 0 && this._touchDest) {
+      const ddx = this._touchDest.x - player.x;
+      const ddy = this._touchDest.y - player.y;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dist < 6) { this._touchDest = null; }
+      else { dx = (ddx / dist) * speed; dy = (ddy / dist) * speed; }
+    }
     if (dx < 0) player.setFlipX(true);
     if (dx > 0) player.setFlipX(false);
 
@@ -243,8 +252,9 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const questKey  = data.craftRole || data.choices?.[0]?.value?.key;
     const isDone    = questKey ? completed.has(questKey === 'crafts' ? 'crafts' : questKey) : false;
 
-    const locked   = data.isGuildMaster && !this._allDone();
-    const sprite   = this.add.image(worldX, worldY, data.texture).setScale(4).setDepth(4);
+    const locked      = data.isGuildMaster && !this._allDone();
+    const spriteScale = window.matchMedia('(pointer: coarse)').matches ? 2 : 4;
+    const sprite      = this.add.image(worldX, worldY, data.texture).setScale(spriteScale).setDepth(4);
     const tag      = this.add.text(worldX, worldY - 26, this._npcName, {
       fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#F59E0B',
       stroke: '#000000', strokeThickness: 3,
@@ -405,7 +415,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
   _setDialogueOpen (val) {
     this._dialogueOpen = val;
-    if (val) this._touchDir = { x: 0, y: 0 };
+    if (val) this._touchDest = null;
   }
 
   _showAnnouncement (msg) {
@@ -465,37 +475,26 @@ GQ.Interior = class Interior extends Phaser.Scene {
   // ── Touch controls (mobile) ─────────────────────────────────────────
 
   _buildTouchControls () {
-    this._touchDir = { x: 0, y: 0 };
+    this._touchDest = null;
     if (!window.matchMedia('(pointer: coarse)').matches) return;
 
-    let origin   = null;
-    let dragging = false;
-
-    this.input.on('pointerdown', (ptr) => {
-      origin   = { x: ptr.x, y: ptr.y };
-      dragging = false;
-    });
-
-    this.input.on('pointermove', (ptr) => {
-      if (!origin || !ptr.isDown) return;
-      const dx  = ptr.x - origin.x;
-      const dy  = ptr.y - origin.y;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      if (len > 12) {
-        dragging        = true;
-        this._touchDir  = { x: dx / len, y: dy / len };
+    const setDest = (ptr) => {
+      if (this._dialogueOpen) return;
+      const wx = ptr.worldX, wy = ptr.worldY;
+      // Tap near an interactable while player is already in range → interact
+      for (const obj of this._interactables) {
+        const tapDist    = Phaser.Math.Distance.Between(wx, wy, obj.x, obj.y);
+        const playerDist = Phaser.Math.Distance.Between(this._player.x, this._player.y, obj.x, obj.y);
+        if (tapDist < 70 && playerDist < 70) {
+          this._triggerInteract(obj);
+          return;
+        }
       }
-    });
+      this._touchDest = { x: wx, y: wy };
+    };
 
-    this.input.on('pointerup', () => {
-      if (!dragging && !this._dialogueOpen) {
-        const n = this._getNearestInteractable();
-        if (n) this._triggerInteract(n);
-      }
-      origin         = null;
-      dragging       = false;
-      this._touchDir = { x: 0, y: 0 };
-    });
+    this.input.on('pointerdown', setDest);
+    this.input.on('pointermove', (ptr) => { if (ptr.isDown) setDest(ptr); });
   }
 
   shutdown () {}

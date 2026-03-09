@@ -131,13 +131,20 @@ GQ.Village = class Village extends Phaser.Scene {
     const player = this._player;
 
     let dx = 0, dy = 0;
-    const td = this._touchDir;
-    if (this._cursors.left.isDown  || this._wasd.A.isDown || td.x < -0.35) dx = -speed;
-    if (this._cursors.right.isDown || this._wasd.D.isDown || td.x >  0.35) dx =  speed;
-    if (this._cursors.up.isDown    || this._wasd.W.isDown || td.y < -0.35) dy = -speed;
-    if (this._cursors.down.isDown  || this._wasd.S.isDown || td.y >  0.35) dy =  speed;
-
+    if (this._cursors.left.isDown  || this._wasd.A.isDown) dx = -speed;
+    if (this._cursors.right.isDown || this._wasd.D.isDown) dx =  speed;
+    if (this._cursors.up.isDown    || this._wasd.W.isDown) dy = -speed;
+    if (this._cursors.down.isDown  || this._wasd.S.isDown) dy =  speed;
     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+
+    // Touch destination: walk toward tapped/dragged point
+    if (dx === 0 && dy === 0 && this._touchDest) {
+      const ddx = this._touchDest.x - player.x;
+      const ddy = this._touchDest.y - player.y;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dist < 6) { this._touchDest = null; }
+      else { dx = (ddx / dist) * speed; dy = (ddy / dist) * speed; }
+    }
     if (dx < 0) player.setFlipX(true);
     if (dx > 0) player.setFlipX(false);
 
@@ -524,7 +531,7 @@ GQ.Village = class Village extends Phaser.Scene {
 
   _setDialogueOpen (val) {
     this._dialogueOpen = val;
-    if (val) this._touchDir = { x: 0, y: 0 };
+    if (val) this._touchDest = null;
   }
 
   _showAnnouncement (msg) {
@@ -563,37 +570,26 @@ GQ.Village = class Village extends Phaser.Scene {
   // ── Touch controls (mobile) ─────────────────────────────────────────
 
   _buildTouchControls () {
-    this._touchDir = { x: 0, y: 0 };
+    this._touchDest = null;
     if (!window.matchMedia('(pointer: coarse)').matches) return;
 
-    let origin   = null;
-    let dragging = false;
-
-    this.input.on('pointerdown', (ptr) => {
-      origin   = { x: ptr.x, y: ptr.y };
-      dragging = false;
-    });
-
-    this.input.on('pointermove', (ptr) => {
-      if (!origin || !ptr.isDown) return;
-      const dx  = ptr.x - origin.x;
-      const dy  = ptr.y - origin.y;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      if (len > 12) {
-        dragging        = true;
-        this._touchDir  = { x: dx / len, y: dy / len };
+    const setDest = (ptr) => {
+      if (this._dialogueOpen) return;
+      const wx = ptr.worldX, wy = ptr.worldY;
+      // Tap near an interactable while player is already in range → interact
+      for (const obj of this._interactables) {
+        const tapDist    = Phaser.Math.Distance.Between(wx, wy, obj.x, obj.y);
+        const playerDist = Phaser.Math.Distance.Between(this._player.x, this._player.y, obj.x, obj.y);
+        if (tapDist < 70 && playerDist < 70) {
+          this._triggerInteract(obj);
+          return;
+        }
       }
-    });
+      this._touchDest = { x: wx, y: wy };
+    };
 
-    this.input.on('pointerup', () => {
-      if (!dragging && !this._dialogueOpen) {
-        const n = this._getNearestInteractable();
-        if (n) this._triggerInteract(n);
-      }
-      origin         = null;
-      dragging       = false;
-      this._touchDir = { x: 0, y: 0 };
-    });
+    this.input.on('pointerdown', setDest);
+    this.input.on('pointermove', (ptr) => { if (ptr.isDown) setDest(ptr); });
   }
 
   shutdown () {
