@@ -233,10 +233,16 @@ GQ.DialogueBox = class DialogueBox extends Phaser.GameObjects.Container {
       btn.on('pointerover', () => highlight(i));
       btn.on('pointerout',  () => btn.setColor(i === selected ? '#F59E0B' : '#FFF8F0'));
       btn.on('pointerdown', () => {
+        highlight(i);
+        // Disable all buttons immediately to prevent a second tap during the delay
+        this._choices.forEach(b => b.disableInteractive());
         const value = choice.value;
         const cb    = this._onClose;
-        this.close();
-        if (cb) cb(value);
+        // Brief pause so the gold highlight is visible before the box closes
+        this.scene.time.delayedCall(220, () => {
+          this.close();
+          if (cb) cb(value);
+        });
       });
 
       this._choices.push(btn);
