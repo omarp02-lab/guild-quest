@@ -1,58 +1,56 @@
 /* ── GQ.Audio — global music manager ──────────────────────────────────
-   Wraps Phaser's shared sound manager so music persists across scenes.
+   Uses HTML5 <audio> elements instead of Web Audio API.
+   HTML5 audio uses the iOS 'playback' session category, which plays
+   through the device speaker even when the hardware silent switch is on.
+   Web Audio uses 'ambient' which is silenced by the silent switch.
 ──────────────────────────────────────────────────────────────────────── */
 
 window.GQ = window.GQ || {};
 
-// Unlock Web Audio on first user gesture (mobile browsers suspend AudioContext)
-['touchstart', 'click'].forEach(evt => {
-  document.addEventListener(evt, () => {
-    const ctx = window.GQ.game?.sound?.context;
-    if (ctx && ctx.state === 'suspended') ctx.resume();
-  }, { once: true, capture: true });
-});
-
 GQ.Audio = {
-  _sound:   null,   // active looping sound object
-  _current: null,   // key of the track currently loaded
+  _el:      null,   // active HTMLAudioElement (looping track)
+  _current: null,   // key of the active track
   _muted:   false,
+  _oneshots: new Set(),  // active one-shot elements kept alive until done
+
+  // Map audio keys to file paths
+  _urls: {
+    'music-village':  'assets/audio/village.ogg',
+    'music-interior': 'assets/audio/interior.ogg',
+    'music-results':  'assets/audio/results.ogg',
+    'music-fanfare':  'assets/audio/fanfare.ogg',
+  },
 
   // ── Start (or continue) a looping track ─────────────────────────
   play (scene, key) {
-    // Resume suspended AudioContext (mobile autoplay policy)
-    const ctx = scene.sound.context;
-    if (ctx && ctx.state === 'suspended') ctx.resume();
+    if (this._current === key && this._el && !this._el.paused) return;
 
-    // Already playing this track — do nothing
-    if (this._current === key && this._sound && this._sound.isPlaying) return;
-
-    // Stop any previous track
-    if (this._sound) {
-      this._sound.stop();
-      this._sound.destroy();
-      this._sound = null;
-    }
-
+    this.stop();
     this._current = key;
-    this._sound   = scene.sound.add(key, { loop: true, volume: 0.55 });
 
-    if (!this._muted) this._sound.play();
+    const el = new Audio(this._urls[key]);
+    el.loop   = true;
+    el.volume = 0.55;
+    this._el  = el;
+
+    if (!this._muted) el.play().catch(() => {});
   },
 
   // ── Play a one-shot (fanfare, stinger) ──────────────────────────
   playOnce (scene, key, volume) {
-    const s = scene.sound.add(key, { loop: false, volume: volume || 0.75 });
-    if (!this._muted) s.play();
-    // Auto-destroy when done
-    s.once('complete', () => s.destroy());
+    const el = new Audio(this._urls[key]);
+    el.volume = volume || 0.75;
+    el.addEventListener('ended', () => this._oneshots.delete(el));
+    this._oneshots.add(el);
+    if (!this._muted) el.play().catch(() => {});
   },
 
   // ── Stop current looping track ──────────────────────────────────
   stop () {
-    if (this._sound) {
-      this._sound.stop();
-      this._sound.destroy();
-      this._sound = null;
+    if (this._el) {
+      this._el.pause();
+      this._el.src = '';
+      this._el = null;
     }
     this._current = null;
   },
@@ -60,9 +58,9 @@ GQ.Audio = {
   // ── Toggle mute, returns new muted state ────────────────────────
   toggleMute () {
     this._muted = !this._muted;
-    if (this._sound) {
-      if (this._muted) this._sound.pause();
-      else             this._sound.resume();
+    if (this._el) {
+      if (this._muted) this._el.pause();
+      else             this._el.play().catch(() => {});
     }
     this._updateBtn();
     return this._muted;

@@ -59,12 +59,13 @@ GQ.Village = class Village extends Phaser.Scene {
     this._drawMap();
 
     // ── Player sprite ───────────────────────────────────────────────
-    const arch = (window.GQ.player && window.GQ.player.archetype) || '1';
+    const arch      = (window.GQ.player && window.GQ.player.archetype) || '1';
+    const isMobile  = window.matchMedia('(pointer: coarse)').matches;
     // If returning from an interior, restore position; else start center-bottom
     const startX = (data && data.returnX) ? data.returnX : W / 2;
     const startY = (data && data.returnY) ? data.returnY : H - 80;
     this._player = this.add.image(startX, startY, `hero_${arch}`)
-      .setDepth(5).setScale(2);
+      .setDepth(5).setScale(isMobile ? 8 / 3 : 2);
 
     // ── Camera follows player ────────────────────────────────────────
     this.cameras.main.setBounds(0, 0, W, H);
@@ -323,7 +324,8 @@ GQ.Village = class Village extends Phaser.Scene {
     const def = GQ.NPC_DATA[npcName];
     if (!def) return null;
     const texture  = textureOverride || def.texture;
-    const sprite   = this.add.image(x, y, texture).setScale(2).setDepth(4);
+    const sprite   = this.add.image(x, y, texture)
+      .setScale(window.matchMedia('(pointer: coarse)').matches ? 8 / 3 : 2).setDepth(4);
 
     const tag = this.add.text(x, y - 26, npcName, {
       fontFamily: "'Press Start 2P'",

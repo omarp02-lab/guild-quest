@@ -32,12 +32,18 @@ GQ.Interior = class Interior extends Phaser.Scene {
     // ── Player at center-bottom of interior ────────────────────────
     const arch        = (window.GQ.player && window.GQ.player.archetype) || '1';
     const isMobile    = window.matchMedia('(pointer: coarse)').matches;
-    const spriteScale = isMobile ? 2 : 4;
+    const spriteScale = isMobile ? 8 / 3 : 4;
     this._player = this.add.image(
       this._ox + this._mapW / 2,
       this._oy + this._mapH - 24,
       `hero_${arch}`
     ).setDepth(5).setScale(spriteScale);
+
+    // ── Camera follow on mobile (map exceeds viewport at larger scale) ──
+    if (isMobile) {
+      this.cameras.main.setBounds(0, 0, this._mapW, this._mapH);
+      this.cameras.main.startFollow(this._player, true, 0.12, 0.12);
+    }
 
     // ── Input ──────────────────────────────────────────────────────
     this._cursors  = this.input.keyboard.createCursorKeys();
@@ -61,7 +67,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
       color:      '#F59E0B',
       stroke:     '#000000',
       strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(20).setAlpha(0);
+    }).setOrigin(0.5).setDepth(20).setAlpha(0).setScrollFactor(0);
   }
 
   update (_time, delta) {
@@ -125,18 +131,22 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const mapData = this.cache.json.get(this._mapKey);
 
     // Calculate scale to fit the interior in the viewport with padding
-    const vw    = this.scale.width;
-    const vh    = this.scale.height;
-    const SCALE = Math.min(
+    const vw       = this.scale.width;
+    const vh       = this.scale.height;
+    const isMobile = window.matchMedia('(pointer: coarse)').matches;
+    const baseFit  = Math.min(
       Math.floor((vw - 40) / (mapData.width  * TILE)),
       Math.floor((vh - 40) / (mapData.height * TILE))
     );
+    // On mobile: 33% larger tiles; map may exceed viewport → camera will scroll
+    const SCALE = isMobile ? baseFit * 4 / 3 : baseFit;
     const TS = TILE * SCALE;
     const W  = mapData.width  * TS;
     const H  = mapData.height * TS;
 
-    this._ox    = Math.floor((vw - W) / 2);
-    this._oy    = Math.floor((vh - H) / 2);
+    // On mobile: no centering offset — world origin is (0,0), camera follows player
+    this._ox    = isMobile ? 0 : Math.floor((vw - W) / 2);
+    this._oy    = isMobile ? 0 : Math.floor((vh - H) / 2);
     this._mapW  = W;
     this._mapH  = H;
     this._scale = SCALE;
@@ -253,7 +263,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
     const isDone    = questKey ? completed.has(questKey === 'crafts' ? 'crafts' : questKey) : false;
 
     const locked      = data.isGuildMaster && !this._allDone();
-    const spriteScale = window.matchMedia('(pointer: coarse)').matches ? 2 : 4;
+    const spriteScale = window.matchMedia('(pointer: coarse)').matches ? 8 / 3 : 4;
     const sprite      = this.add.image(worldX, worldY, data.texture).setScale(spriteScale).setDepth(4);
     const tag      = this.add.text(worldX, worldY - 26, this._npcName, {
       fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#F59E0B',
