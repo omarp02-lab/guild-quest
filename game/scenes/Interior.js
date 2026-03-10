@@ -505,6 +505,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
     this.input.on('pointerdown', setDest);
     this.input.on('pointermove', (ptr) => { if (ptr.isDown) setDest(ptr); });
+    this.input.on('pointerup',   () => { this._touchDest = null; });
   }
 
   shutdown () {}

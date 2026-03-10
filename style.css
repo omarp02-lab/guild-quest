@@ -474,6 +474,17 @@ html, body {
 /* ── Char Create — Ancient Parchment Theme ─────────────────────────────── */
 #char-create.overlay {
   background: rgba(80, 48, 16, 0.72);
+  flex-direction: column;
+  gap: 12px;
+}
+
+#music-credit {
+  font-family: var(--pixel);
+  font-size: 5px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  letter-spacing: 0.08em;
+  line-height: 1.8;
 }
 
 #char-create .panel {
