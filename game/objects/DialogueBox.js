@@ -239,7 +239,7 @@ GQ.DialogueBox = class DialogueBox extends Phaser.GameObjects.Container {
         const value = choice.value;
         const cb    = this._onClose;
         // Brief pause so the gold highlight is visible before the box closes
-        this.scene.time.delayedCall(220, () => {
+        this.scene.time.delayedCall(330, () => {
           this.close();
           if (cb) cb(value);
         });
