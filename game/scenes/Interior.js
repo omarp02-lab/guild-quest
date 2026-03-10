@@ -39,8 +39,8 @@ GQ.Interior = class Interior extends Phaser.Scene {
       `hero_${arch}`
     ).setDepth(5).setScale(spriteScale);
 
-    // ── Camera follow on mobile (map exceeds viewport at larger scale) ──
-    if (isMobile) {
+    // ── Camera follow on mobile when map exceeds viewport ──────────────
+    if (this._needsScroll) {
       this.cameras.main.setBounds(0, 0, this._mapW, this._mapH);
       this.cameras.main.startFollow(this._player, true, 0.12, 0.12);
     }
@@ -138,18 +138,22 @@ GQ.Interior = class Interior extends Phaser.Scene {
       Math.floor((vw - 40) / (mapData.width  * TILE)),
       Math.floor((vh - 40) / (mapData.height * TILE))
     );
-    // On mobile: 33% larger tiles; map may exceed viewport → camera will scroll
-    const SCALE = isMobile ? baseFit * 4 / 3 : baseFit;
+    // Mobile: fixed integer scale (5) so all interiors have consistent 80px tiles,
+    // no fractional positions (prevents stray line artifacts), and maps scroll as needed.
+    // Desktop: fit to viewport as before.
+    const SCALE = isMobile ? 5 : baseFit;
     const TS = TILE * SCALE;
     const W  = mapData.width  * TS;
     const H  = mapData.height * TS;
 
-    // On mobile: no centering offset — world origin is (0,0), camera follows player
-    this._ox    = isMobile ? 0 : Math.floor((vw - W) / 2);
-    this._oy    = isMobile ? 0 : Math.floor((vh - H) / 2);
-    this._mapW  = W;
-    this._mapH  = H;
-    this._scale = SCALE;
+    // On mobile: center map if it fits in viewport; use world-origin if camera must scroll
+    const needsScroll   = isMobile && (W > vw - 10 || H > vh - 10);
+    this._ox            = needsScroll ? 0 : Math.floor((vw - W) / 2);
+    this._oy            = needsScroll ? 0 : Math.floor((vh - H) / 2);
+    this._mapW          = W;
+    this._mapH          = H;
+    this._scale         = SCALE;
+    this._needsScroll   = needsScroll;
 
     // Map TSX source keywords → loaded texture keys + tileset params
     const TILESET_MAP = [
