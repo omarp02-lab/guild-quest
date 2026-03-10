@@ -33,7 +33,13 @@ GQ.Audio = {
     el.volume = 0.55;
     this._el  = el;
 
-    if (!this._muted) el.play().catch(() => {});
+    if (!this._muted) el.play().catch(() => {
+      // iOS occasionally rejects play() during scene transitions even when audio
+      // is already unlocked. Retry once after a short delay.
+      setTimeout(() => {
+        if (this._el === el && !this._muted) el.play().catch(() => {});
+      }, 150);
+    });
   },
 
   // ── Play a one-shot (fanfare, stinger) ──────────────────────────
