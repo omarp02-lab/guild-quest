@@ -31,7 +31,7 @@ GQ.Interior = class Interior extends Phaser.Scene {
 
     // ── Player at center-bottom of interior ────────────────────────
     const arch        = (window.GQ.player && window.GQ.player.archetype) || '1';
-    const isMobile    = window.matchMedia('(pointer: coarse)').matches;
+    const isMobile    = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 1024;
     const spriteScale = isMobile ? 8 / 3 : 4;
     this._player = this.add.image(
       this._ox + this._mapW / 2,
@@ -133,20 +133,24 @@ GQ.Interior = class Interior extends Phaser.Scene {
     // Calculate scale to fit the interior in the viewport with padding
     const vw       = this.scale.width;
     const vh       = this.scale.height;
-    const isMobile = window.matchMedia('(pointer: coarse)').matches;
+    // Match main.js detection: coarse pointer OR small screen (tablets, small laptops)
+    const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 1024;
     const baseFit  = Math.min(
       Math.floor((vw - 40) / (mapData.width  * TILE)),
       Math.floor((vh - 40) / (mapData.height * TILE))
     );
-    // Mobile: fixed integer scale (5) so all interiors have consistent 80px tiles,
-    // no fractional positions (prevents stray line artifacts), and maps scroll as needed.
+    // Mobile: fill-width scale — each map gets a scale that makes it at least as wide
+    // as the viewport, so there are no empty margins. Camera scrolls for excess.
+    // Cap at 8 (128px tiles) so studio/tent don't become absurdly zoomed on large screens.
+    // Result is always an integer → no fractional tile positions → no stray line artifacts.
     // Desktop: fit to viewport as before.
-    const SCALE = isMobile ? 5 : baseFit;
+    const fillScale = isMobile ? Math.ceil(vw / (mapData.width * TILE)) : baseFit;
+    const SCALE = isMobile ? Math.min(fillScale, 8) : baseFit;
     const TS = TILE * SCALE;
     const W  = mapData.width  * TS;
     const H  = mapData.height * TS;
 
-    // On mobile: center map if it fits in viewport; use world-origin if camera must scroll
+    // Camera follows player when map exceeds viewport; otherwise center the map.
     const needsScroll   = isMobile && (W > vw - 10 || H > vh - 10);
     this._ox            = needsScroll ? 0 : Math.floor((vw - W) / 2);
     this._oy            = needsScroll ? 0 : Math.floor((vh - H) / 2);
