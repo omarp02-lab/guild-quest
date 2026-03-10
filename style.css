@@ -487,6 +487,11 @@ html, body {
   line-height: 1.8;
 }
 
+#music-credit a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: underline;
+}
+
 #char-create .panel {
   /* Parchment base with subtle noise texture + burned edges */
   background-color: #c9a87a;
